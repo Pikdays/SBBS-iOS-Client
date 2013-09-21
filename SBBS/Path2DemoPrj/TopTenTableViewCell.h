@@ -15,6 +15,7 @@
     IBOutlet UILabel * readandreplyLabel;
     IBOutlet UILabel * boardLabel;
     IBOutlet UILabel * isTop;
+    IBOutlet UILabel * articleDateLabel;
     int ID;
     NSDate * time;
     NSString * title;
@@ -35,6 +36,4 @@
 @property(nonatomic, assign)int read;
 @property(nonatomic, assign)BOOL unread;
 @property(nonatomic, assign)BOOL top;
--(void)setReadyToShow;
--(void)showAinmationWhenSeleceted;
 @end

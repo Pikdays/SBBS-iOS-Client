@@ -3,7 +3,14 @@
 <plist version="1.0">
 <dict>
 	<key>PreferenceSpecifiers</key>
-	<array/>
+	<array>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>version 1.3</string>
+		</dict>
+	</array>
 	<key>StringsTable</key>
 	<string>Root</string>
 	<key>UserName</key>
@@ -14,8 +21,6 @@
 	<false/>
 	<key>uploadImage</key>
 	<integer>0</integer>
-	<key>isNotifySound</key>
-	<false/>
 	<key>isNotFirstLoad</key>
 	<false/>
 	<key>NotificationCount</key>
@@ -23,6 +28,12 @@
 	<key>ShowAttachments</key>
 	<false/>
 	<key>isGotDeviceToken</key>
+	<false/>
+	<key>isPostDeviceToken</key>
+	<false/>
+	<key>DeviceToken</key>
+	<string></string>
+	<key>UserAvatar</key>
 	<string></string>
 	<key>UserToken</key>
 	<string></string>

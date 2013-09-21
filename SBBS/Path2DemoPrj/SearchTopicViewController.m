@@ -10,11 +10,12 @@
 
 @implementation SearchTopicViewController
 @synthesize searchString;
+@synthesize topTenArray;
 @synthesize mDelegate;
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id)init
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super init];
     if (self) {
         topTenArray = [[NSMutableArray alloc] init];
     }
@@ -25,14 +26,18 @@
 {
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
-    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height-108)];
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
+    //[self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height-108)];
+    self.view.backgroundColor = [UIColor whiteColor];
+    
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     myBBS = appDelegate.myBBS;
-    customTableView = [[CustomTableView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height) Delegate:self];
+    
+    if (IS_IOS7) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+    }
+    
+    customTableView = [[CustomTableView alloc] initWithFrame:CGRectMake(0, 0, rect.size.width, rect.size.height - 108) Delegate:self];
     [self.view addSubview:customTableView];
-    _timeScroller = [[TimeScroller alloc] initWithDelegate:self];
-    [customTableView reloadData];
 }
 
 - (void)viewDidUnload
@@ -46,15 +51,12 @@
 {
     topTenArray = nil;
     customTableView = nil;
-    _timeScroller = nil;
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
     return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
-
-
 
 
 #pragma mark - 
@@ -75,8 +77,8 @@
     if (cell == nil) {
         NSArray * array = [[NSBundle mainBundle] loadNibNamed:@"TopTenTableViewCell" owner:self options:nil];
         cell = [array objectAtIndex:0];
-        [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
     }
+    [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
     
     Topic * topic = [topTenArray objectAtIndex:indexPath.row];
     cell.ID = topic.ID;
@@ -87,37 +89,22 @@
     cell.read = topic.read;
     cell.board = topic.board;
     cell.top = topic.top;
-    cell.unread=YES;
-    [cell setReadyToShow];
+    cell.unread = YES;
     
     return cell;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath   
 {
-    if (indexPath.row == [topTenArray count]-1) {
-        if ([topTenArray count]*80 <= tableView.frame.size.height) {
-            return tableView.frame.size.height - ([topTenArray count]-1)*80 + 10;
-        }
-    }
     return 80;
 }
 
--(void)clearCellBack:(UITableViewCell *)cell
-{
-    cell.backgroundColor = [UIColor clearColor];
-}
 // Called after the user changes the selection.
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
-    UITableViewCell * cell = (UITableViewCell *)[tableView cellForRowAtIndexPath:indexPath];
-    cell.backgroundColor = [UIColor lightTextColor];
-    [self performSelector:@selector(clearCellBack:) withObject:cell afterDelay:0.5];
-    
     Topic * topic = [topTenArray objectAtIndex:indexPath.row];
-    SingleTopicViewController * singleTopicViewController = [[SingleTopicViewController alloc] initWithNibName:@"SingleTopicViewController" bundle:nil];
-    singleTopicViewController.rootTopic = topic;
+    SingleTopicViewController * singleTopicViewController = [[SingleTopicViewController alloc] initWithRootTopic:topic];
     
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     HomeViewController * home = appDelegate.homeViewController;
@@ -125,46 +112,21 @@
     [home restoreViewLocation];
     [home removeOldViewController];
     home.realViewController = singleTopicViewController;
-    [home showViewController:topic.title];
+    [home showViewController:topic.author];
 }
-- (void)scrollViewDidScroll{
-    [_timeScroller scrollViewDidScroll];
-}
-
-- (void)scrollViewDidEndDecelerating{
-    [_timeScroller scrollViewDidEndDecelerating];
-}
-
-- (void)scrollViewWillBeginDragging{
-    [_timeScroller scrollViewWillBeginDragging];
-}
-
-- (void)scrollViewDidEndDragging:(BOOL)decelerate{
-    if (!decelerate) {
-        [_timeScroller scrollViewDidEndDecelerating];
-    }
-}
-- (UITableView *)tableViewForTimeScroller:(TimeScroller *)timeScroller {
-    return customTableView.mTableView;
-}
-- (NSDate *)dateForCell:(UITableViewCell *)cell {
-    SingleTopicCell * topTenCell = (SingleTopicCell *)cell;
-    return topTenCell.time;
-}
-
 
 -(void)firstTimeLoad
 {    
     NSArray * topics = [BBSAPI searchTopics:searchString start:@"0" Token:myBBS.mySelf.token];
-    [topTenArray removeAllObjects];
-    [topTenArray addObjectsFromArray:topics];
+    [self.topTenArray removeAllObjects];
+    [self.topTenArray addObjectsFromArray:topics];
     [customTableView reloadData];
-    [HUD removeFromSuperview];
+    [activityView removeFromSuperview];
+    activityView = nil;
     
     [UIView beginAnimations:nil context:nil];
 	[UIView setAnimationDuration:0.3];
 	[UIView setAnimationDelegate:self];
-	[UIView setAnimationDidStopSelector:@selector(bounce2AnimationStopped)];
     [customTableView setAlpha:1];
 	[UIView commitAnimations];
 }
@@ -172,13 +134,10 @@
 -(void)reloadData
 {    
     [customTableView setAlpha:0];
-    
-    HUD = [[MBProgressHUD alloc] initWithView:self.view];
-    [self.view addSubview:HUD];
-    HUD.labelText = @"载入中...";
-    [HUD showWhileExecuting:@selector(firstTimeLoad) onTarget:self withObject:nil animated:YES];
+    [activityView start];
+    [self.view addSubview:activityView];
+    [self performSelectorInBackground:@selector(firstTimeLoad) withObject:nil];
 }
-
 
 #pragma -
 #pragma mark CustomtableView delegate
@@ -186,9 +145,8 @@
 {
     @autoreleasepool {
         NSArray * topics = [BBSAPI searchTopics:searchString start:@"0" Token:myBBS.mySelf.token];
-        [topTenArray removeAllObjects];
-        [topTenArray addObjectsFromArray:topics];
-        
+        [self.topTenArray removeAllObjects];
+        [self.topTenArray addObjectsFromArray:topics];
         [self performSelectorOnMainThread:@selector(refreshTableView) withObject:nil waitUntilDone:NO];
     }
 }
@@ -196,7 +154,7 @@
 {
     @autoreleasepool {
         NSArray * topics = [BBSAPI searchTopics:searchString start:[NSString stringWithFormat:@"%i",[topTenArray count]] Token:myBBS.mySelf.token];
-        [topTenArray addObjectsFromArray:topics];
+        [self.topTenArray addObjectsFromArray:topics];
         [self performSelectorOnMainThread:@selector(refreshTableView) withObject:nil waitUntilDone:NO];
     }
 }

@@ -20,8 +20,9 @@
 {
     self = [super initWithFrame:frame];
     if (self) {
-        // Initialization code
-        [self setHandlerColor:[UIColor colorWithRed:230/255.f green:230/255.f blue:230/255.f alpha:1]];
+        
+        //[self setHandlerColor:[UIColor colorWithRed:230/255.f green:230/255.f blue:230/255.f alpha:1]];
+        [self setHandlerColor:[UIColor colorWithRed:1.f green:1.f blue:1.f alpha:1]];
     }
     return self;
 }
@@ -38,14 +39,10 @@
 // An empty implementation adversely affects performance during animation.
 - (void)drawRect:(CGRect)rect
 {
-    CGColorRef shadowColor = [UIColor colorWithRed:0 green:0 
-                                              blue:0 alpha:.4f].CGColor;
-    
     CGContextRef context = UIGraphicsGetCurrentContext();
     
     
-    //Draw Main Cirlce
-    
+    //Draw Main Cirlce    
     CGContextSaveGState(context);
     
     //CGContextSetShadowWithColor(context, CGSizeMake(0, 7), 10.f, shadowColor);
@@ -70,13 +67,13 @@
     
     CGContextSaveGState(context);
     
+    /*
 //    CGContextSetShadowWithColor(context, CGSizeMake(0, -4), 10.f, shadowColor);
     CGContextSetStrokeColorWithColor(context, [UIColor colorWithWhite:.5 alpha:.6f].CGColor);
     CGContextSetLineWidth(context, 1);
     CGContextStrokeEllipseInRect(context, CGRectMake(rect.origin.x+12.5f, rect.origin.y+12, 10, 10));
     
     CGContextRestoreGState(context);
-    
     
     CGFloat colors[8] = { 0,0, 0, 0,
         0, 0, 0, .6};
@@ -88,6 +85,7 @@
     CGContextClip(context);
     CGContextDrawLinearGradient (context, gradient, CGPointMake(0, 0), CGPointMake(0,rect.size.height), 0);
     CGContextRestoreGState(context);
+     */
 }
 
 -(void) dealloc{

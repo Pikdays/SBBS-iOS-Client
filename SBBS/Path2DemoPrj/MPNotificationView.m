@@ -218,8 +218,8 @@ static CGFloat const __imagePadding = 8.0f;
         _textLabel = [[UILabel alloc] initWithFrame:textFrame];
         _textLabel.font = textFont;
         _textLabel.numberOfLines = 1;
-        _textLabel.textAlignment = UITextAlignmentLeft;
-        _textLabel.lineBreakMode = UILineBreakModeTailTruncation;
+        _textLabel.textAlignment = NSTextAlignmentLeft;
+        _textLabel.lineBreakMode = NSLineBreakByTruncatingTail;
         _textLabel.backgroundColor = [UIColor clearColor];
         [_contentView addSubview:_textLabel];
         
@@ -232,8 +232,8 @@ static CGFloat const __imagePadding = 8.0f;
         _detailTextLabel = [[UILabel alloc] initWithFrame:detailFrame];
         _detailTextLabel.font = detailFont;
         _detailTextLabel.numberOfLines = 1;
-        _detailTextLabel.textAlignment = UITextAlignmentLeft;
-        _detailTextLabel.lineBreakMode = UILineBreakModeTailTruncation;
+        _detailTextLabel.textAlignment = NSTextAlignmentLeft;
+        _detailTextLabel.lineBreakMode = NSLineBreakByTruncatingTail;
         _detailTextLabel.backgroundColor = [UIColor clearColor];
         [_contentView addSubview:_detailTextLabel];
         
@@ -344,7 +344,7 @@ static CGFloat const __imagePadding = 8.0f;
         _tapBlock(self);
     }
     
-    if ([_delegate respondsToSelector:@selector(tapReceivedForNotificationView:)])
+    if ([_delegate respondsToSelector:@selector(didTapOnNotificationView:)])
     {
         [_delegate didTapOnNotificationView:self];
     }
@@ -418,7 +418,7 @@ static CGFloat const __imagePadding = 8.0f;
     
     [UIView animateWithDuration:0.5
                           delay:0.0
-                        options:UIViewAnimationCurveEaseInOut
+                        options:UIViewAnimationOptionCurveEaseInOut
                      animations:^{
                          viewToRotateIn.layer.transform = CATransform3DIdentity;
                          viewToRotateOut.layer.transform = viewOutEndTransform;

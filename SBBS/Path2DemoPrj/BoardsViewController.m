@@ -12,11 +12,11 @@
 @implementation BoardsViewController
 @synthesize topTenArray;
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id)init
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super init];
     if (self) {
-        // Custom initialization
+
     }
     return self;
 }
@@ -24,13 +24,10 @@
 -(void)firstTimeLoad
 {
     self.topTenArray = [BBSAPI hotBoards];
-    [HUD removeFromSuperview];
-    customTableView = [[CustomNoFooterTableView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height) Delegate:self];
-    customTableView.mRefreshTableHeaderView.backgroundColor = [UIColor colorWithRed:(50.0f/255.0f) green:(57.0f/255.0f) blue:(74.0f/255.0f) alpha:1.0f];
-    customTableView.mTableView.backgroundColor = [UIColor colorWithRed:(50.0f/255.0f) green:(57.0f/255.0f) blue:(74.0f/255.0f) alpha:1.0f];
-    [customTableView.mTableView setSeparatorStyle:UITableViewCellSeparatorStyleNone];
-    [self.view addSubview:customTableView];
     [customTableView reloadData];
+    
+    [activityView removeFromSuperview];
+    activityView = nil;
 }
 
 - (void)viewDidLoad
@@ -38,14 +35,21 @@
     [super viewDidLoad];
     self.title = @"人气版面";
     CGRect rect = [[UIScreen mainScreen] bounds];
-    [self.view setFrame:CGRectMake(0, 0, 290, rect.size.height - 64)];
-    self.view.backgroundColor = [UIColor colorWithRed:(50.0f/255.0f) green:(57.0f/255.0f) blue:(74.0f/255.0f) alpha:1.0f];
-    [self.navigationController.navigationBar setHidden:NO];
+    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
+    self.view.backgroundColor = [UIColor whiteColor];
     
-    HUD = [[MBProgressHUD alloc] initWithView:self.view];
-	HUD.labelText = @"载入中...";
-    [self.view insertSubview:HUD atIndex:0];
-	[HUD showWhileExecuting:@selector(firstTimeLoad) onTarget:self withObject:nil animated:YES];
+    if (IS_IOS7) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+    }
+    
+    customTableView = [[CustomNoFooterTableView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - 64) Delegate:self];
+    activityView = [[FPActivityView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 1)];
+    
+    [self.view addSubview:customTableView];
+    
+    [activityView start];
+    [self.view addSubview:activityView];
+    [self performSelectorInBackground:@selector(firstTimeLoad) withObject:nil];
     
     UISwipeGestureRecognizer* recognizer;
     recognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(back:)];
@@ -57,55 +61,15 @@
 {
     [self.navigationController popViewControllerAnimated:YES];
 }
+
 - (void)viewDidUnload
 {
     [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
 }
 -(void)dealloc
 {
     customTableView = nil;
 }
-
-#pragma mark - Rotation
--(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
-    return (toInterfaceOrientation == UIInterfaceOrientationPortrait);
-}
-- (BOOL)shouldAutorotate{
-    return NO;
-}
--(NSUInteger)supportedInterfaceOrientations{
-    return UIInterfaceOrientationMaskPortrait;
-}
-
-
-#pragma mark UIScrollViewDelegateMethods
-//The TimeScroller needs to know what's happening with the UITableView (UIScrollView)
-- (void)scrollViewDidScroll{
-   // [_timeScroller scrollViewDidScroll];
-}
-
-- (void)scrollViewDidEndDecelerating{
-   // [_timeScroller scrollViewDidEndDecelerating];
-}
-
-- (void)scrollViewWillBeginDragging{
-  //  [_timeScroller scrollViewWillBeginDragging];
-}
-
-- (void)scrollViewDidEndDragging:(BOOL)decelerate{
-
-}
-//You should return an NSDate related to the UITableViewCell given. This will be
-//the date displayed when the TimeScroller is above that cell.
-- (UITableView *)tableViewForTimeScroller:(TimeScroller *)timeScroller {
-    return nil;
-}
-- (NSDate *)dateForCell:(UITableViewCell *)cell {
-    return nil;
-}
-
 
 #pragma mark - UITableView delegate
 -(NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -113,20 +77,14 @@
     return [topTenArray count];
 }
 
-
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    
-    TopicsViewController * topicsViewController = [[TopicsViewController alloc] initWithNibName:@"TopicsViewController" bundle:nil];
+    TopicsViewController * topicsViewController = [[TopicsViewController alloc] init];
     Board * b = [topTenArray objectAtIndex:indexPath.row];
     topicsViewController.boardName = b.name;
     
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    HomeViewController * home = appDelegate.homeViewController;
-    [home restoreViewLocation];
-    [home removeOldViewController];
-    home.realViewController = topicsViewController;
-    [home showViewController:b.name];
+    [appDelegate.homeViewController.navigationController pushViewController:topicsViewController animated:YES];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -134,13 +92,13 @@
     if (cell == nil) {
         cell = [[BoardsCellView alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"BoardsCellView"];
     }
-
+    [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
+    
     Board * b = [topTenArray objectAtIndex:indexPath.row];
     cell.name = b.name;
     cell.description = b.description;
     cell.section = b.section;
     cell.leaf = b.leaf;
-    [cell setReadyToShow];
 	return cell;
 }
 
@@ -168,4 +126,15 @@
     return 44;
 }
 
+
+#pragma mark - Rotation
+-(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
+    return YES;
+}
+- (BOOL)shouldAutorotate{
+    return YES;
+}
+-(NSUInteger)supportedInterfaceOrientations{
+    return UIInterfaceOrientationMaskAllButUpsideDown;
+}
 @end

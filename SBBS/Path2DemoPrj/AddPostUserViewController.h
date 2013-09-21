@@ -10,8 +10,6 @@
 #import "HomeViewController.h"
 #import "AppDelegate.h"
 #import "CustomNoFooterWithDeleteTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
 #import "BoardsCellView.h"
 #import "TopicsViewController.h"
 #import "FriendCellView.h"
@@ -20,17 +18,23 @@
 #import "BBSAPI.h"
 #import "MyBBS.h"
 
+@protocol AddPostUserViewControllerDelegate <NSObject>
 
-@interface AddPostUserViewController : UIViewController<TimeScrollerDelegate, MBProgressHUDDelegate, UITableViewDataSource, UITableViewDelegate>
+-(void)dismissAddUserView;
+-(void)didAddUser:(NSString *)userID;
+
+@end
+
+@interface AddPostUserViewController : UIViewController<MBProgressHUDDelegate, UITableViewDataSource, UITableViewDelegate>
 {
     NSArray * onlineFriendsArray;
     NSArray * allFriendsArray;
     NSArray * showArray;
     
     IBOutlet UIButton * editFriendButton;
-    IBOutlet UISegmentedControl * seg;
+    UISegmentedControl * seg;
     CustomNoFooterWithDeleteTableView * customTableView;
-    MBProgressHUD * HUD;
+    FPActivityView* activityView;
     id mDelegate;
     
     MyBBS * myBBS;
@@ -39,8 +43,6 @@
 @property(nonatomic, retain)NSArray * allFriendsArray;
 @property(nonatomic, assign)id mDelegate;
 
--(IBAction)back:(id)sender;
+-(void)cancel;
 -(IBAction)segmentControlValueChanged:(id)sender;
-
--(IBAction)editFriends:(id)sender;
 @end

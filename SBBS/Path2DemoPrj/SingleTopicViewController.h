@@ -11,8 +11,6 @@
 #import "HomeViewController.h"
 #import "TopicsViewController.h"
 #import "CustomTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
 #import "SingleTopicCell.h"
 #import "SingleTopicCommentCell.h"
 #import "PostTopicViewController.h"
@@ -20,30 +18,25 @@
 #import "WBUtil.h"
 #import "BBSAPI.h"
 #import "UserInfoViewController.h"
-#import "AttachmentsViewController.h"
-//#import "MWPhotoBrowserIncell.h"
+#import "WebViewController.h"
+#import "UIViewController+MJPopupViewController.h"
 
 @protocol SingleTopicViewControllerDelegate <NSObject>
 -(void)refreshNotification;
 @end
 
-
-@interface SingleTopicViewController : UIViewController<TimeScrollerDelegate, MBProgressHUDDelegate, QuadCurveMenuDelegate, UIActionSheetDelegate>
+@interface SingleTopicViewController : UIViewController<MBProgressHUDDelegate, UIActionSheetDelegate, SingleTopicCellDelegate, SingleTopicCommentCellDelegate>
 {
-    Topic * rootTopic;
-    Topic * selectTopic;
-    NSMutableArray * topicsArray;
-    CustomTableView * customTableView;
-    TimeScroller *_timeScroller;
-    MBProgressHUD * HUD;
-    QuadCurveMenu * menu;
+    Topic *rootTopic;
+    Topic *selectTopic;
+    NSMutableArray *topicsArray;
 
-    UILabel * topTitle;
+    CustomTableView *customTableView;
     
+    FPActivityView* activityView;
     MyBBS * myBBS;
     
     BOOL isForShowNotification;
-    
     id __unsafe_unretained mDelegate;
     TopTenTableViewCell * selectedCell;
     
@@ -52,8 +45,11 @@
 @property(nonatomic, strong)Topic * rootTopic;
 @property(nonatomic, assign)BOOL isForShowNotification;
 @property(nonatomic, unsafe_unretained)id mDelegate;
-@property(nonatomic)CustomTableView * customTableView;
+@property(nonatomic, strong)CustomTableView * customTableView;
 @property(nonatomic, strong)TopTenTableViewCell * selectedCell;
--(IBAction)back:(id)sender;
+@property(nonatomic, strong)UIViewController *forRetainController;
+
+- (id)initWithRootTopic:(Topic *)topic;
+- (IBAction)back:(id)sender;
 
 @end

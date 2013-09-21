@@ -242,7 +242,7 @@ typedef enum {
 - (void)processText;
 CTFontRef CTFontCreateFromUIFont(UIFont *font);
 - (BOOL)isSystemUnder3_2;
-UITextAlignment UITextAlignmentFromCoreTextAlignment(FTCoreTextAlignement alignment);
+NSTextAlignment NSTextAlignmentFromCoreTextAlignment(FTCoreTextAlignement alignment);
 NSInteger rangeSort(NSString *range1, NSString *range2, void *context);
 - (void)drawImages;
 - (void)doInit;
@@ -289,17 +289,17 @@ CTFontRef CTFontCreateFromUIFont(UIFont *font)
     return ctFont;
 }
 
-UITextAlignment UITextAlignmentFromCoreTextAlignment(FTCoreTextAlignement alignment)
+NSTextAlignment NSTextAlignmentFromCoreTextAlignment(FTCoreTextAlignement alignment)
 {
 	switch (alignment) {
 		case FTCoreTextAlignementCenter:
-			return UITextAlignmentCenter;
+			return NSTextAlignmentCenter;
 			break;
 		case FTCoreTextAlignementRight:
-			return UITextAlignmentRight;
+			return NSTextAlignmentRight;
 			break;			
 		default:
-			return UITextAlignmentLeft;
+			return NSTextAlignmentLeft;
 			break;
 	}
 }
@@ -1105,8 +1105,8 @@ UITextAlignment UITextAlignmentFromCoreTextAlignment(FTCoreTextAlignement alignm
 		[defaultStyle.color setFill];
 		[_processedString drawInRect:rect
 							withFont:defaultStyle.font
-					   lineBreakMode:UILineBreakModeWordWrap
-						   alignment:UITextAlignmentFromCoreTextAlignment(defaultStyle.textAlignment)];
+					   lineBreakMode:NSLineBreakByWordWrapping
+						   alignment:NSTextAlignmentFromCoreTextAlignment(defaultStyle.textAlignment)];
 	}
 	else {
 		[self updateFramesetterIfNeeded];

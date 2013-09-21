@@ -8,7 +8,6 @@
 
 #import <UIKit/UIKit.h>
 #import "AppDelegate.h"
-#import "TimeScroller.h"
 #import "TopTenViewController.h"
 #import "SingleTopicViewController.h"
 
@@ -18,7 +17,7 @@
 
 @end
 
-@interface HomeViewController : UIViewController{
+@interface HomeViewController : UIViewController <UIGestureRecognizerDelegate>{
     IBOutlet UILabel * topTitle;
     CGPoint touchBeganPoint;
     UIViewController * realViewController;
@@ -34,10 +33,7 @@
 - (IBAction)leftBarBtnTapped:(id)sender;
 - (void)removeOldViewController;
 - (void)showViewController:(NSString *)topTitle;
-- (void)firstrestoreViewLocation;
 - (void)restoreViewLocation;
 - (void)moveToRightSide;
 - (void)moveToRightSideTotaly;
-
-- (IBAction)changeMode:(id)sender;
 @end

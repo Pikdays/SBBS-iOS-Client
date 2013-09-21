@@ -8,16 +8,15 @@
 
 #import <UIKit/UIKit.h>
 #import "DataModel.h"
+#import "BBSAPI.h"
+
 @interface MailsViewCell : UITableViewCell
 {
     IBOutlet UILabel * authorLabel;
     IBOutlet UILabel * titleLabel;
-    IBOutlet UIImageView * unreadImage;
-    
+    IBOutlet UILabel * timeLabel;
+    UIImageView * notificationImageView;
     Mail * mail;
 }
 @property(nonatomic, strong)Mail * mail;
-
--(void)setReadyToShow;
--(void)showAinmationWhenSeleceted;
 @end

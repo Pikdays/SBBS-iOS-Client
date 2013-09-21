@@ -8,8 +8,6 @@
 #import <UIKit/UIKit.h>
 #import "AppDelegate.h"
 #import "CustomTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
 #import "MailsViewCell.h"
 #import "PostMailViewController.h"
 #import "DataModel.h"
@@ -23,8 +21,7 @@
     Mail * rootMail;
     Mail * mail;
     CustomTableView * customTableView;
-    TimeScroller *_timeScroller;
-    MBProgressHUD * HUD;
+    FPActivityView* activityView;
     MyBBS * myBBS;
     
     IBOutlet UILabel * topTitle;
@@ -32,6 +29,7 @@
     IBOutlet UILabel * authorLabel;
     IBOutlet UILabel * titleLabel;
     IBOutlet UILabel * content;
+    IBOutlet UILabel * timeLabel;
     
     IBOutlet UIScrollView * scrollView;
     IBOutlet UIView * realView;

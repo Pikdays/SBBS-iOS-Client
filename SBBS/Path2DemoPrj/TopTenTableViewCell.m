@@ -7,6 +7,7 @@
 //
 
 #import "TopTenTableViewCell.h"
+#import "BBSAPI.h"
 
 @implementation TopTenTableViewCell
 @synthesize ID;
@@ -19,7 +20,6 @@
 @synthesize unread;
 @synthesize top;
 
-
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
@@ -29,17 +29,14 @@
     return self;
 }
 
-
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
     return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
 
--(void)setReadyToShow
-{
-    UIView *bgView = [[UIView alloc] init];
-    bgView.backgroundColor = [UIColor lightTextColor];
-    self.selectedBackgroundView = bgView;
+#pragma mark UIView
+- (void)layoutSubviews {
+	[super layoutSubviews];
     
     if (unread) {
         [articleTitleLabel setAlpha:1];
@@ -50,29 +47,15 @@
     }
     
     [isTop setHidden:!top];
-    [articleTitleLabel setText:title];
-    [authorLabel setText:[NSString stringWithFormat:@"作者:%@", author]];
-    [readandreplyLabel setText:[NSString stringWithFormat:@"人气:%i/%i", replies, read]];
-    [boardLabel setText:[NSString stringWithFormat:@"讨论区:%@", board]];
-}
-
-- (void)bounce1AnimationStopped
-{
-	[UIView beginAnimations:nil context:nil];
-	[UIView setAnimationDuration:0.1];
-	[UIView setAnimationDelegate:self];
-	[UIView setAnimationDidStopSelector:@selector(bounce2AnimationStopped)];
-    self.transform = CGAffineTransformIdentity;
-	[UIView commitAnimations];
-}
-
--(void)showAinmationWhenSeleceted
-{
-    [UIView beginAnimations:nil context:nil];
-    [UIView setAnimationDuration:0.1];
-    [UIView setAnimationDelegate:self];
-    [UIView setAnimationDidStopSelector:@selector(bounce1AnimationStopped)];
-    self.transform = CGAffineTransformScale(CGAffineTransformIdentity, 0.98, 0.98);
-    [UIView commitAnimations];
+    [articleTitleLabel setText:[NSString stringWithFormat:@"%@", title]];
+    [authorLabel setText:[NSString stringWithFormat:@"%@", author]];
+    [readandreplyLabel setText:[NSString stringWithFormat:@"%i/%i", replies, read]];
+    if (board != nil) {
+        [boardLabel setText:[NSString stringWithFormat:@"%@ 版", board]];
+    }
+    else {
+        [boardLabel setText:@""];
+    }
+    [articleDateLabel setText:[BBSAPI dateToString:time]];
 }
 @end

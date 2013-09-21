@@ -11,8 +11,6 @@
 #import "HomeViewController.h"
 #import "AppDelegate.h"
 #import "CustomNoFooterTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
 #import "BoardsCellView.h"
 #import "TopicsViewController.h"
 #import "FriendCellView.h"
@@ -26,8 +24,7 @@
     NSString * searchString;
     User * searchedUser;
     CustomNoFooterTableView * customTableView;
-    MBProgressHUD * HUD;
-    
+    FPActivityView* activityView;
     MyBBS * myBBS;
 }
 @property(nonatomic, strong)NSString * searchString;

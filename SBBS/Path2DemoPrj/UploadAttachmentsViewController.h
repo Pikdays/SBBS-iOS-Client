@@ -11,22 +11,19 @@
 #import "MyBBS.h"
 #import "AppDelegate.h"
 #import "PostTopicViewController.h"
-#import "ImageData.h"
-#import "SingleImageWithScrollViewController.h"
-#import "MWPhotoBrowser.h"
-#import "DLCImagePickerController.h"
 
-@interface UploadAttachmentsViewController : UIViewController<UIImagePickerControllerDelegate, MWPhotoBrowserDelegate, DLCImagePickerDelegate>
+@interface UploadAttachmentsViewController : UIViewController<UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIActionSheetDelegate, UITableViewDelegate, UITableViewDataSource>
 {
     UIImagePickerController *imagePicker;
     NSObject<UIViewPassValueDelegate> * __unsafe_unretained mDelegate;
     MyBBS * myBBS;
     int postType;
     NSArray *attList;
-    IBOutlet UITableView *attTable;
+    UITableView *attTable;
     NSString *board;
     int postId;
-    MBProgressHUD * HUD;
+    FPActivityView *activityView;
+    MBProgressHUD *HUD;
     UIImage *image;
     NSString *imageFileName;
     NSURL *theUrl;
@@ -42,6 +39,8 @@
 @property(nonatomic, unsafe_unretained)NSObject<UIViewPassValueDelegate> * mDelegate;
 @property(nonatomic, strong)NSArray *attList;
 @property (nonatomic, strong) NSArray *photos;
+
 - (IBAction)pickImageFromAlbum:(id)sender;
--(IBAction)cancel:(id)sender;
+- (IBAction)pickImageFromCamera:(id)sender;
+- (IBAction)cancel:(id)sender;
 @end

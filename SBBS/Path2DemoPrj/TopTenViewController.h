@@ -7,22 +7,20 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "CustomNoFooterTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
+#import "CustomNoFooterViewSectionHeaderTableView.h"
 #import "TopTenTableViewCell.h"
 #import "SingleTopicViewController.h"
 #import "DataModel.h"
 #import "WBUtil.h"
 #import "BBSAPI.h"
-@interface TopTenViewController : UIViewController<TimeScrollerDelegate, MBProgressHUDDelegate>
+
+@interface TopTenViewController : UIViewController<MBProgressHUDDelegate>
 {
     NSArray * topTenArray;
-    CustomNoFooterTableView * customTableView;
-    TimeScroller *_timeScroller;
-    MBProgressHUD * HUD;
+    CustomNoFooterViewSectionHeaderTableView * customTableView;
+    FPActivityView* activityView;
 }
 @property(nonatomic, strong)NSArray * topTenArray;
-@property(nonatomic)CustomNoFooterTableView * customTableView;
+@property(nonatomic, strong)CustomNoFooterViewSectionHeaderTableView * customTableView;
 
 @end

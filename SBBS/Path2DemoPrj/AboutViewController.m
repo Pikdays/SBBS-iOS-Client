@@ -28,11 +28,19 @@
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
     [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
     
-    [settingTableView setFrame:CGRectMake(0, 44, rect.size.width, rect.size.height-44)];
-    settingTableView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
-    // Do any additional setup after loading the view from its nib.
+    [settingTableView setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
+    self.navigationItem.title = @"设置";
+    
+    if (IS_IOS7) {
+    }
+    else
+    {
+        [self.navigationController.navigationBar setTintColor:[UIColor lightGrayColor]];
+    }
+    
+    UIBarButtonItem *backButton=[[UIBarButtonItem alloc] initWithTitle:@"返回" style:UIBarButtonItemStyleBordered target:self action:@selector(done:)];
+    self.navigationItem.leftBarButtonItem = backButton;
 }
 
 - (void)viewDidUnload
@@ -60,13 +68,13 @@
         return 1;
     }
     if(section == 1){
-        return 4;
+        return 3;
     }
     if (section == 2) {
         return 3;
     }
     if (section == 3) {
-        return 2;
+        return 1;
     }
     if (section == 4) {
         return 1;
@@ -76,41 +84,20 @@
 
 - (float)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if(indexPath.section == 1 && indexPath.row == 3){
+    if(indexPath.section == 1 && indexPath.row == 2){
         return 74;
     }
     return 44;
 }
 
 
-- (NSString*)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
-{
-    switch (section) {
-        case 1:
-            return @"偏好设置";
-            break;
-        default:
-            break;
-    }
-    return nil;
-}
-
-
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell *cell;
-    /*
-    if (indexPath.section == 1 && indexPath.row == 1) {
-        cell = [tableView dequeueReusableCellWithIdentifier:@"uploadImageCell"];
-        if (cell == nil) {
-            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"uploadImageCell"];
-        }
-    }
-    else
-     */
     
     cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
-    // Configure the cell...
+    [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
+
     switch (indexPath.section) {
         case 0:
             switch (indexPath.row) {
@@ -118,8 +105,14 @@
                 {
                     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
                     cell.textLabel.text = @"当前用户";
-                    cell.detailTextLabel.text = appDelegate.myBBS.mySelf.ID;
-                    [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
+                    if (appDelegate.myBBS.mySelf.ID != nil) {
+                        cell.detailTextLabel.text = appDelegate.myBBS.mySelf.ID;
+                        [cell setAccessoryType:UITableViewCellAccessoryNone];
+                    }
+                    else{
+                        cell.detailTextLabel.text = @"未登录";
+                        [cell setAccessoryType:UITableViewCellAccessoryNone];
+                    }
                     break;
                 }
                 default:
@@ -130,23 +123,13 @@
             switch (indexPath.row) {
                 case 0:
                 {
-                    cell.textLabel.text = @"新消息提示音";
-                    NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
-                    BOOL isNotifySound = [defaults boolForKey:@"isNotifySound"];
-                    UISwitch * notifySwitch = [[UISwitch alloc]initWithFrame:CGRectMake(210, 8, 80, 28)];
-                    notifySwitch.backgroundColor = [UIColor clearColor];
-                    notifySwitch.on = isNotifySound;
-                    [notifySwitch addTarget:self action:@selector(notifySwitch:) forControlEvents:UIControlEventValueChanged];
-                    [cell.contentView addSubview:notifySwitch];
-                    cell.selectionStyle = UITableViewCellSelectionStyleNone;
-                    break;
-                }
-                case 1:
-                {
                     cell.textLabel.text = @"加载用户头像";
                     NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
                     BOOL isLoadAvatar = [defaults boolForKey:@"isLoadAvatar"];
-                    UISwitch * loadAvatarSwitch = [[UISwitch alloc]initWithFrame:CGRectMake(210, 8, 80, 28)];
+                    UISwitch * loadAvatarSwitch = [[UISwitch alloc]initWithFrame:CGRectMake(self.view.frame.size.width - 100, 8, 80, 28)];
+                    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+                        [loadAvatarSwitch setFrame:CGRectMake(self.view.frame.size.width - 210, 8, 80, 28)];
+                    }
                     loadAvatarSwitch.backgroundColor = [UIColor clearColor];
                     loadAvatarSwitch.on = isLoadAvatar;
                     [loadAvatarSwitch addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
@@ -154,12 +137,15 @@
                     cell.selectionStyle = UITableViewCellSelectionStyleNone;
                     break;
                 }
-                case 2:
+                case 1:
                 {
                     cell.textLabel.text = @"图文混排显示";
                     NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
                     BOOL ShowAttachments = [defaults boolForKey:@"ShowAttachments"];
-                    UISwitch * loadAvatarSwitch = [[UISwitch alloc]initWithFrame:CGRectMake(210, 8, 80, 28)];
+                    UISwitch * loadAvatarSwitch = [[UISwitch alloc]initWithFrame:CGRectMake(self.view.frame.size.width - 100, 8, 80, 28)];
+                    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+                        [loadAvatarSwitch setFrame:CGRectMake(self.view.frame.size.width - 210, 8, 80, 28)];
+                    }
                     loadAvatarSwitch.backgroundColor = [UIColor clearColor];
                     loadAvatarSwitch.on = ShowAttachments;
                     [loadAvatarSwitch addTarget:self action:@selector(showAttachments:) forControlEvents:UIControlEventValueChanged];
@@ -167,15 +153,21 @@
                     cell.selectionStyle = UITableViewCellSelectionStyleNone;
                     break;
                 }
-                case 3:
+                case 2:
                 {
                     cell.textLabel.text = @"上传图片质量";
                     NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
                     int uploadImage = [defaults integerForKey:@"uploadImage"];
                     
-                    SEFilterControl *filter = [[SEFilterControl alloc] initWithFrame:CGRectMake(130, 4, 170, 70) Titles:[NSArray arrayWithObjects:@"原图", @"中等", @"低质", nil]];
+                    SEFilterControl *filter = [[SEFilterControl alloc] initWithFrame:CGRectMake(self.view.frame.size.width - 190, 4, 170, 70) Titles:[NSArray arrayWithObjects:@"原图", @"中等", @"低质", nil]];
+                    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+                        [filter setFrame:CGRectMake(self.view.frame.size.width - 290, 4, 170, 70)];
+                    }
                     [filter setSelectedIndex:uploadImage];
-                    [filter setProgressColor:[UIColor colorWithRed:0.21 green:0.47 blue:0.79 alpha:1]];
+                    [filter setProgressColor:[UIColor colorWithRed:0.1 green:0.8 blue:0.1 alpha:1]];
+                    if (!IS_IOS7) {
+                        [filter setProgressColor:[UIColor colorWithRed:0.22 green:0.55 blue:0.95 alpha:1]];
+                    }
                     [filter addTarget:self action:@selector(filterValueChanged:) forControlEvents:UIControlEventValueChanged];
                     [cell.contentView addSubview:filter];
                     cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -189,11 +181,10 @@
             switch (indexPath.row) {
                 case 0:
                 {
-                    NSString * plistPath = [[NSBundle mainBundle] pathForResource:@"Path2DemoPrj copy-Info" ofType:@"plist"];
-                    NSDictionary *dictionary = [[NSDictionary alloc] initWithContentsOfFile:plistPath];
-                    
-                    cell.textLabel.text = @"软件版本";
-                    cell.detailTextLabel.text = [dictionary objectForKey:@"CFBundleVersion"];
+                    cell.textLabel.text = @"关于应用";
+                    NSDictionary* infoDict = [[NSBundle mainBundle] infoDictionary];
+                    NSString* version = [infoDict objectForKey:@"CFBundleVersion"];
+                    cell.detailTextLabel.text = version;
                     [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
                     break;
                 }
@@ -211,12 +202,7 @@
             switch (indexPath.row) {
                 case 0:
                 {
-                    cell.textLabel.text = @"清除图片缓存";
-                    break;
-                }
-                case 1:
-                {
-                    cell.textLabel.text = @"清除所有网络缓存";
+                    cell.textLabel.text = @"清除缓存";
                     break;
                 }
                 default:
@@ -224,16 +210,10 @@
             }
             break;
         case 4:
-        {
-            UIButton *logOutButton=[UIButton buttonWithType:UIButtonTypeCustom];
-            [logOutButton setFrame:CGRectMake(0, 0, 300, 47)];
-            [logOutButton setImage:[UIImage imageNamed:@"LogOutNormal.png"] forState:UIControlStateNormal];
-            [logOutButton setImage:[UIImage imageNamed:@"LogOutPress.png"] forState:UIControlStateHighlighted];
-            [logOutButton addTarget:self action:@selector(showActionSheet:) forControlEvents:UIControlEventTouchUpInside];
-            
-            [cell setBackgroundView:logOutButton];
-            [cell.contentView setHidden:YES];
-            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        {            
+            cell.textLabel.text = @"登出";
+            cell.textLabel.textAlignment = NSTextAlignmentCenter;
+            cell.textLabel.textColor = [UIColor redColor];
             break;
         }
         default:
@@ -243,27 +223,29 @@
     return cell;
 }
 
-
-
 #pragma mark - Table view delegate
-
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if (indexPath.section == 0 && indexPath.row == 0) {
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    if (indexPath.section == 0 && indexPath.row == 0 && appDelegate.myBBS.mySelf.ID != nil) {
         AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
 
-        NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
-        BOOL * isLoadAvatar = [defaults boolForKey:@"isLoadAvatar"];
         UserInfoViewController * userInfoViewController;
-        if (isLoadAvatar) {
-            userInfoViewController = [[UserInfoViewController alloc] initWithNibName:@"UserInfoViewController" bundle:nil];
-        }
-        else {
-            userInfoViewController = [[UserInfoViewController alloc] initWithNibName:@"UserInfoViewController_noAvatar" bundle:nil];
-        }
-        
+        userInfoViewController = [[UserInfoViewController alloc] initWithNibName:@"UserInfoViewController" bundle:nil];
         userInfoViewController.userString = appDelegate.myBBS.mySelf.ID;
-        [self.navigationController pushViewController:userInfoViewController animated:YES];
+        [self presentPopupViewController:userInfoViewController animationType:MJPopupViewAnimationSlideTopBottom];
+    }
+    
+    if (indexPath.section == 0 && indexPath.row == 0 && appDelegate.myBBS.mySelf.ID == nil) {
+        MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+        // Configure for text only and offset down
+        hud.mode = MBProgressHUDModeText;
+        hud.labelText = @"请先登录";
+        hud.margin = 30.f;
+        hud.yOffset = 0.f;
+        hud.removeFromSuperViewOnHide = YES;
+        [hud hide:YES afterDelay:0.8];
+        [tableView reloadData];
     }
     
     if(indexPath.section == 2 && indexPath.row == 0){
@@ -282,36 +264,27 @@
     if(indexPath.section == 3 && indexPath.row == 0){
         [[SDImageCache sharedImageCache] cleanDisk];
         [[SDImageCache sharedImageCache] clearDisk];
-        MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-        // Configure for text only and offset down
-        hud.mode = MBProgressHUDModeText;
-        hud.labelText = @"图片缓存清除成功";
-        hud.margin = 30.f;
-        hud.yOffset = 0.f;
-        hud.removeFromSuperViewOnHide = YES;
-        [hud hide:YES afterDelay:0.8];
-    }
-    
-    if(indexPath.section == 3 && indexPath.row == 1){
-        [[SDImageCache sharedImageCache] cleanDisk];
-        [[SDImageCache sharedImageCache] clearDisk];
         [[SDImageCache sharedImageCache] clearMemory];
         [ASIHTTPRequest clearSession];
         [[NSURLCache sharedURLCache] removeAllCachedResponses];
+        
         MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
         // Configure for text only and offset down
         hud.mode = MBProgressHUDModeText;
-        hud.labelText = @"网络缓存清除成功";
+        hud.labelText = @"缓存清除成功";
         hud.margin = 30.f;
         hud.yOffset = 0.f;
         hud.removeFromSuperViewOnHide = YES;
         [hud hide:YES afterDelay:0.8];
+        [tableView reloadData];
+    }
+    
+    if(indexPath.section == 4 && indexPath.row == 0){
+        [self showActionSheet:nil];
     }
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
-
-
 
 -(IBAction)done:(id)sender
 {
@@ -324,7 +297,7 @@
                                  initWithTitle:@"确定登出虎踞龙蟠BBS？"
                                  delegate:self
                                  cancelButtonTitle:@"取消"
-                                 destructiveButtonTitle:@"登出"
+                                 destructiveButtonTitle:@"确定"
                                  otherButtonTitles:nil, nil];
     
     actionSheet.actionSheetStyle = UIActionSheetStyleBlackOpaque;
@@ -347,23 +320,7 @@
     NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
     [defaults setBool:isButtonOn forKey:@"isLoadAvatar"];
 }
--(void)notifySwitch:(id)sender
-{
-    UISwitch *switchButton = (UISwitch*)sender;
-    BOOL isButtonOn = [switchButton isOn];
-    NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setBool:isButtonOn forKey:@"isNotifySound"];
-    if (isButtonOn) {
-        CFURLRef		soundFileURLRef;
-        SystemSoundID	soundFileObject;
-        NSURL *tapSound   = [[NSBundle mainBundle] URLForResource: @"notification"
-                                                    withExtension: @"wav"];
-        soundFileURLRef = (__bridge CFURLRef) tapSound;
-        AudioServicesCreateSystemSoundID (soundFileURLRef, &soundFileObject);
-        AudioServicesPlaySystemSound (soundFileObject);
-        AudioServicesPlaySystemSound (kSystemSoundID_Vibrate);
-    }
-}
+
 -(void)showAttachments:(id)sender
 {
     UISwitch *switchButton = (UISwitch*)sender;
@@ -374,15 +331,15 @@
 
 -(void)sendFeedBack
 {
-    NSString * plistPath = [[NSBundle mainBundle] pathForResource:@"Path2DemoPrj copy-Info" ofType:@"plist"];
-    NSDictionary *dictionary = [[NSDictionary alloc] initWithContentsOfFile:plistPath];
+    NSDictionary* infoDict = [[NSBundle mainBundle] infoDictionary];
+    NSString* version = [infoDict objectForKey:@"CFBundleVersion"];
     
     MFMailComposeViewController *picker = [[MFMailComposeViewController alloc] init];
     [picker setToRecipients:[NSArray arrayWithObject:@"zhangxiaobo@me.com"]];
     [picker setSubject:@"虎踞龙蟠客户端反馈"];
-    [picker setMessageBody:[NSString stringWithFormat:@"\n\n\n\n设备: %@\n系统: iOS %@\n软件: 虎踞龙蟠 %@", [self _platformString], [UIDevice currentDevice].systemVersion, [dictionary objectForKey:@"CFBundleVersion"]]  isHTML:NO];
+    [picker setMessageBody:[NSString stringWithFormat:@"\n\n\n\n设备: %@\n系统: iOS %@\n软件: 虎踞龙蟠 %@", [self _platformString], [UIDevice currentDevice].systemVersion, version]  isHTML:NO];
     picker.mailComposeDelegate = self;
-    [self presentModalViewController:picker animated:YES];
+    [self presentViewController:picker animated:YES completion:nil];
 }
 
 #pragma mark - MFMailComposeViewControllerDelegate
@@ -399,7 +356,7 @@
                                               otherButtonTitles:@"好", nil];
         [alert show];
     }
-    [controller dismissModalViewControllerAnimated:YES];
+    [controller dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - SEFilterControlDelegate

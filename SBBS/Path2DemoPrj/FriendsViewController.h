@@ -10,8 +10,6 @@
 #import "HomeViewController.h"
 #import "AppDelegate.h"
 #import "CustomNoFooterWithDeleteTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
 #import "BoardsCellView.h"
 #import "TopicsViewController.h"
 #import "FriendCellView.h"
@@ -21,17 +19,17 @@
 #import "MyBBS.h"
 
 
-@interface FriendsViewController : UIViewController<TimeScrollerDelegate, MBProgressHUDDelegate, UITableViewDataSource, UITableViewDelegate>
+@interface FriendsViewController : UIViewController<MBProgressHUDDelegate, UITableViewDataSource, UITableViewDelegate>
 {
     NSArray * onlineFriendsArray;
     NSArray * allFriendsArray;
     NSArray * showArray;
     
-    IBOutlet UISegmentedControl * seg;
+    UISegmentedControl * seg;
     CustomNoFooterWithDeleteTableView * customTableView;
-    MBProgressHUD * HUD;
+    FPActivityView* activityView;
+    
     id mDelegate;
-
     MyBBS * myBBS;
 }
 @property(nonatomic, strong)NSArray * onlineFriendsArray;
@@ -39,6 +37,4 @@
 
 -(IBAction)back:(id)sender;
 -(IBAction)segmentControlValueChanged:(id)sender;
-
--(IBAction)editFriends:(id)sender;
 @end

@@ -10,10 +10,9 @@
 @implementation SearchBoardViewController
 @synthesize searchString;
 
-
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id)init
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super init];
     if (self) {
         topTenArray = [[NSMutableArray alloc] init];
     }
@@ -24,38 +23,31 @@
 {
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
-    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height-108)];
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
+    //[self.view setFrame:CGRectMake(0, 108, rect.size.width, rect.size.height - 108)];
+    self.view.backgroundColor = [UIColor whiteColor];
+    
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     myBBS = appDelegate.myBBS;
     
-    customTableView = [[CustomNoFooterTableView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height) Delegate:self];
-    [self.view addSubview:customTableView];
+    if (IS_IOS7) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+    }
     
-    [customTableView reloadData];
+    customTableView = [[CustomNoFooterTableView alloc] initWithFrame:CGRectMake(0, 0, rect.size.width, rect.size.height - 108) Delegate:self];
+    [self.view addSubview:customTableView];
 }
 
 - (void)viewDidUnload
 {
     [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
 }
+
 -(void)dealloc
 {
-    
     topTenArray = nil;
     customTableView = nil;
-    HUD = nil;
+    activityView = nil;
 }
-
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    return (interfaceOrientation == UIInterfaceOrientationPortrait);
-}
-
-
-
 
 #pragma mark - UITableView delegate
 -(NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -63,20 +55,10 @@
     return [topTenArray count];
 }
 
-
--(void)clearCellBack:(UITableViewCell *)cell
-{
-    cell.backgroundColor = [UIColor clearColor];
-}
-// Called after the user changes the selection.
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
-    UITableViewCell * cell = (UITableViewCell *)[tableView cellForRowAtIndexPath:indexPath];
-    cell.backgroundColor = [UIColor lightTextColor];
-    [self performSelector:@selector(clearCellBack:) withObject:cell afterDelay:0.5];
-    
-    TopicsViewController * topicsViewController = [[TopicsViewController alloc] initWithNibName:@"TopicsViewController" bundle:nil];
+    TopicsViewController * topicsViewController = [[TopicsViewController alloc] init];
     Board * b = [topTenArray objectAtIndex:indexPath.row];
     topicsViewController.boardName = b.name;
     
@@ -85,23 +67,21 @@
     [home restoreViewLocation];
     [home removeOldViewController];
     home.realViewController = topicsViewController;
-    [home showViewController:b.description];
+    [home showViewController:b.name];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     BoardsCellView * cell = (BoardsCellView *)[tableView dequeueReusableCellWithIdentifier:@"BoardsCellView"];
     if (cell == nil) {
-        NSArray * array = [[NSBundle mainBundle] loadNibNamed:@"BoardsCellView" owner:self options:nil];
-        cell = [array objectAtIndex:0];
-        [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
+        cell = [[BoardsCellView alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"BoardsCellView"];
     }
+    [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
     
     Board * b = [topTenArray objectAtIndex:indexPath.row];
     cell.name = b.name;
     cell.description = b.description;
     cell.section = b.section;
     cell.leaf = b.leaf;
-    [cell setReadyToShow];
     
     if (!b.leaf) {
         //[cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
@@ -115,22 +95,6 @@
     return 44;
 }
 
-- (void)scrollViewDidScroll{
-    
-}
-
-- (void)scrollViewDidEndDecelerating{
-    
-}
-
-- (void)scrollViewWillBeginDragging{
-   
-}
-
-- (void)scrollViewDidEndDragging:(BOOL)decelerate{
-
-}
-
 -(void)firstTimeLoad
 {
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
@@ -139,12 +103,12 @@
     [topTenArray removeAllObjects];
     [topTenArray addObjectsFromArray:topics];
     [customTableView reloadData];
-    [HUD removeFromSuperview];
+    [activityView removeFromSuperview];
+    activityView = nil;
     
     [UIView beginAnimations:nil context:nil];
 	[UIView setAnimationDuration:0.3];
 	[UIView setAnimationDelegate:self];
-	[UIView setAnimationDidStopSelector:@selector(bounce2AnimationStopped)];
     [customTableView setAlpha:1];
 	[UIView commitAnimations];
 }
@@ -152,10 +116,10 @@
 -(void)reloadData
 {
     [customTableView setAlpha:0];
-    HUD = [[MBProgressHUD alloc] initWithView:self.view];
-    [self.view addSubview:HUD];
-    HUD.labelText = @"载入中...";
-    [HUD showWhileExecuting:@selector(firstTimeLoad) onTarget:self withObject:nil animated:YES];
+    activityView = [[FPActivityView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 1)];
+    [activityView start];
+    [self.view addSubview:activityView];
+    [self performSelectorInBackground:@selector(firstTimeLoad) withObject:nil];
 }
 
 
@@ -182,5 +146,16 @@
     [NSThread detachNewThreadSelector:@selector(refreshTable) toTarget:self withObject:nil];
 }
 
+
+#pragma mark - Rotation
+-(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
+    return YES;
+}
+- (BOOL)shouldAutorotate{
+    return YES;
+}
+-(NSUInteger)supportedInterfaceOrientations{
+    return UIInterfaceOrientationMaskAllButUpsideDown;
+}
 
 @end

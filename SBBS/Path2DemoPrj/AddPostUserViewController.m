@@ -13,11 +13,10 @@
 @synthesize allFriendsArray;
 @synthesize mDelegate;
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id)initWithRootTopic:(Topic *)topic
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super init];
     if (self) {
-        // Custom initialization
     }
     return self;
 }
@@ -27,11 +26,10 @@
     self.onlineFriendsArray = [BBSAPI onlineFriends:myBBS.mySelf.token];
     self.allFriendsArray = [BBSAPI allFriends:myBBS.mySelf.token];
     showArray = onlineFriendsArray;
-    customTableView = [[CustomNoFooterWithDeleteTableView alloc] initWithFrame:CGRectMake(0, 88, 320, self.view.frame.size.height-88) Delegate:self];
-    [self.view addSubview:customTableView];
     [customTableView reloadData];
-    [HUD removeFromSuperview];
-    HUD = nil;
+    
+    [activityView removeFromSuperview];
+    activityView = nil;
 }
 
 - (void)viewDidLoad
@@ -39,19 +37,52 @@
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
     [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
-    [editFriendButton setHidden:YES];
+    [self.view setBackgroundColor:[UIColor whiteColor]];
+    
+    UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
+    self.navigationItem.leftBarButtonItem = cancelButton;
+    self.title = @"添加用户";
+    
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     myBBS = appDelegate.myBBS;
     
-    HUD = [[MBProgressHUD alloc] initWithView:self.view];
-    [self.view insertSubview:HUD atIndex:0];
-    HUD.labelText = @"载入中...";
-    [HUD showWhileExecuting:@selector(firstTimeLoad) onTarget:self withObject:nil animated:YES];
-    [HUD release];
+    UIToolbar * toolbar;
+    if (IS_IOS7) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+        customTableView = [[CustomNoFooterWithDeleteTableView alloc] initWithFrame:CGRectMake(0, 108, self.view.frame.size.width, self.view.frame.size.height - 108) Delegate:self];
+        activityView = [[FPActivityView alloc] initWithFrame:CGRectMake(0, 108, self.view.frame.size.width, 1)];
+        toolbar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 64, self.view.frame.size.width, 44)];
+    }
+    else {
+        [self.navigationController.navigationBar setTintColor:[UIColor lightGrayColor]];
+        customTableView = [[CustomNoFooterWithDeleteTableView alloc] initWithFrame:CGRectMake(0, 44, self.view.frame.size.width, self.view.frame.size.height - 108) Delegate:self];
+        activityView = [[FPActivityView alloc] initWithFrame:CGRectMake(0, 44, self.view.frame.size.width, 1)];
+        toolbar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 44)];
+    }
+    [self.view addSubview:customTableView];
     
+    NSArray * itemArray = [NSArray arrayWithObjects:@"在线好友", @"全部好友", nil];
+    seg = [[UISegmentedControl alloc] initWithItems:itemArray];
+    [seg setSelectedSegmentIndex:0];
+    [seg setFrame:CGRectMake(6, 7, self.view.frame.size.width - 10, 30)];
+    [seg addTarget:self action:@selector(segmentControlValueChanged:) forControlEvents:UIControlEventValueChanged];
+    
+    if (!IS_IOS7) {
+        [seg setSegmentedControlStyle:UISegmentedControlStyleBar];
+        [seg setTintColor:[UIColor lightGrayColor]];
+        [toolbar setTintColor:[UIColor lightGrayColor]];
+    }
+    
+    [toolbar addSubview:seg];
+    [self.view addSubview:toolbar];
+    
+    activityView = [[FPActivityView alloc] initWithFrame:CGRectMake(0, 64, self.view.frame.size.width, 1)];
+    [activityView start];
+    [self.view addSubview:activityView];
+    [self performSelectorInBackground:@selector(firstTimeLoad) withObject:nil];
 }
--(IBAction)back:(id)sender
+
+-(void)cancel
 {
     [mDelegate dismissAddUserView];
 }
@@ -70,40 +101,7 @@
     [customTableView release];
     customTableView = nil;
     showArray = nil;
-    
 }
-
-
-#pragma mark UIScrollViewDelegateMethods
-//The TimeScroller needs to know what's happening with the UITableView (UIScrollView)
-- (void)scrollViewDidScroll{
-    // [_timeScroller scrollViewDidScroll];
-}
-
-- (void)scrollViewDidEndDecelerating{
-    // [_timeScroller scrollViewDidEndDecelerating];
-}
-
-- (void)scrollViewWillBeginDragging{
-    //  [_timeScroller scrollViewWillBeginDragging];
-}
-
-- (void)scrollViewDidEndDragging:(BOOL)decelerate{
-    
-}
-//You should return an NSDate related to the UITableViewCell given. This will be
-//the date displayed when the TimeScroller is above that cell.
-- (UITableView *)tableViewForTimeScroller:(TimeScroller *)timeScroller {
-    return nil;
-}
-- (NSDate *)dateForCell:(UITableViewCell *)cell {
-    return nil;
-}
-
-
-
-
-
 
 #pragma mark - UITableView delegate
 -(NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -137,11 +135,10 @@
     if (cell == nil) {
         NSArray * array = [[NSBundle mainBundle] loadNibNamed:@"FriendCellView" owner:self options:nil];
         cell = [array objectAtIndex:0];
-        [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
     }
+    [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
     
     cell.user = [showArray objectAtIndex:indexPath.row];
-    [cell setReadyToShow];
 	return cell;
 }
 
@@ -156,20 +153,6 @@
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     self.onlineFriendsArray = [BBSAPI onlineFriends:myBBS.mySelf.token];
     self.allFriendsArray = [BBSAPI allFriends:myBBS.mySelf.token];
-    
-    switch (seg.selectedSegmentIndex) {
-        case 0:
-            [editFriendButton setHidden:YES];
-            showArray = onlineFriendsArray;
-            break;
-        case 1:
-            [editFriendButton setHidden:NO];
-            showArray = allFriendsArray;
-            break;
-        default:
-            break;
-    }
-    
     [self performSelectorOnMainThread:@selector(refreshTableView) withObject:nil waitUntilDone:NO];
     [pool release];
 }
@@ -188,11 +171,9 @@
     UISegmentedControl *myUISegmentedControl=(UISegmentedControl *)sender;
     switch (myUISegmentedControl.selectedSegmentIndex) {
         case 0:
-            [editFriendButton setHidden:YES];
             showArray = onlineFriendsArray;
             break;
         case 1:
-            [editFriendButton setHidden:NO];
             showArray = allFriendsArray;
             break;
         default:

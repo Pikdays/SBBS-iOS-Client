@@ -8,20 +8,20 @@
 
 #import "SingleTopicCell.h"
 #import "Attachment.h"
-#import "MWPhotoBrowserIncell.h"
-#import <QuartzCore/QuartzCore.h>
+#import "BBSAPI.h"
+#import "AppDelegate.h"
 
 @implementation SingleTopicCell
-@synthesize attExist;
-@synthesize attExistPhoto;
 @synthesize ID;
+@synthesize read;
 @synthesize time;
 @synthesize title;
 @synthesize author;
 @synthesize content;
-@synthesize contentTextView;
 @synthesize attachments;
-@synthesize attachmentsViewController;
+@synthesize indexRow;
+@synthesize mDelegate;
+@synthesize attachmentsViewArray;
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
@@ -42,61 +42,33 @@
 {
     NSMutableArray * picArray = [[NSMutableArray alloc] init];
     for (int i = 0; i < [attachments count]; i++) {
-        NSString * attUrlString=[[attachments objectAtIndex:i] attUrl];
-        if ([attUrlString hasSuffix:@".png"] || [attUrlString hasSuffix:@".jpg"] || [attUrlString hasSuffix:@".jpeg"] || [attUrlString hasSuffix:@".PNG"] || [attUrlString hasSuffix:@".JPG"] || [attUrlString hasSuffix:@".JPEG"])
+        NSString * attUrlString=[[[attachments objectAtIndex:i] attUrl] lowercaseString];
+        if ([attUrlString hasSuffix:@".png"] || [attUrlString hasSuffix:@".jpeg"] || [attUrlString hasSuffix:@".jpg"] || [attUrlString hasSuffix:@".tiff"] || [attUrlString hasSuffix:@".bmp"])
         {
-            [picArray addObject:[MWPhoto photoWithURL:[NSURL URLWithString:attUrlString]]];
+            [picArray addObject:[attachments objectAtIndex:i]];
         }
     }
     return picArray;
 }
 
--(void)setReadyToShow
+-(NSArray *)getDocList
 {
-    UIView *bgView = [[UIView alloc] init];
-    bgView.backgroundColor = [UIColor lightTextColor];
-    self.selectedBackgroundView = bgView;
-    
-    [articleTitleLabel setText:title];
-    [authorLabel setText:author];
-    [contentLabel setText:content];
-    if (attExist) {
-        [attNotifier setHidden:NO];
+    NSMutableArray * picArray = [[NSMutableArray alloc] init];
+    for (int i = 0; i < [attachments count]; i++) {
+        NSString * attUrlString=[[[attachments objectAtIndex:i] attUrl] lowercaseString];
+        if ([attUrlString hasSuffix:@".png"] || [attUrlString hasSuffix:@".jpeg"] || [attUrlString hasSuffix:@".jpg"] || [attUrlString hasSuffix:@".tiff"] || [attUrlString hasSuffix:@".bmp"])
+        {
+            //[picArray addObject:[attachments objectAtIndex:i]];
+        }
+        else
+        {
+            [picArray addObject:[attachments objectAtIndex:i]];
+        }
     }
-    else
-    {
-        [attNotifier setHidden:YES];
-    }
-    UIFont *font = [UIFont systemFontOfSize:15.0];
-    CGSize size2 = [content sizeWithFont:font constrainedToSize:CGSizeMake(290, 10000) lineBreakMode:UILineBreakModeWordWrap];
-    
-    [contentLabel setFrame:CGRectMake(contentLabel.frame.origin.x, contentLabel.frame.origin.y, contentLabel.frame.size.width, size2.height)];
-    
-    NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
-    BOOL ShowAttachments = [defaults boolForKey:@"ShowAttachments"];
-    if (ShowAttachments && attExistPhoto && attachmentsViewController == nil) {
-        MWPhotoBrowserIncell * browser = [[MWPhotoBrowserIncell alloc] initWithPhotos:[self getPicList]];
-        UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:browser];
-        [nc.view setFrame:CGRectMake(15, contentLabel.frame.origin.y + size2.height + 10, 290, 380)];
-        [nc.view setAutoresizesSubviews:NO];
-        nc.view.layer.shadowColor = [UIColor whiteColor].CGColor;
-        nc.view.layer.shadowOpacity = 1.0f;
-        nc.view.layer.shadowOffset = CGSizeMake(1.0f, 1.0f);
-        nc.view.layer.shadowRadius = 0.8f;
-        nc.view.layer.masksToBounds = NO;
-        [nc.view layer].shadowPath = [UIBezierPath bezierPathWithRect:[nc.view layer].bounds].CGPath;
-        
-        [self addSubview:nc.view];
-        self.attachmentsViewController = nc;
-    }
-    
-    [self attachLongPressHandler];
+    return picArray;
 }
 
-
-
 #pragma -Longpress
-
 - (BOOL)canBecomeFirstResponder{
     return YES;
 }
@@ -141,6 +113,99 @@
         [menu setTargetRect:self.frame inView:self.superview];
         [menu setMenuVisible:YES animated:YES];
     }
+}
+
+#pragma - ImageAttachmentViewDelegate
+-(void)imageAttachmentViewTaped:(int)indexNum
+{
+    [mDelegate imageAttachmentViewInCellTaped:indexRow Index:indexNum];
+}
+#pragma - AttachmentViewDelegate
+-(void)attachmentViewTaped:(BOOL)isPhoto IndexNum:(int)indexNum
+{
+    [mDelegate attachmentViewInCellTaped:isPhoto IndexRow:indexRow IndexNum:indexNum];
+}
+
+
+#pragma mark UIView
+- (void)layoutSubviews {
+	[super layoutSubviews];
+    
+    if (attachmentsViewArray != nil) {
+        UIView * view;
+        for (view in attachmentsViewArray) {
+            [view removeFromSuperview];
+        }
+        self.attachmentsViewArray = [[NSMutableArray alloc] init];
+    }
+    else {
+        self.attachmentsViewArray = [[NSMutableArray alloc] init];
+    }
+    
+    [articleTitleLabel setText:title];
+    [authorLabel setText:author];
+    [articleDateLabel setText:[BBSAPI dateToString:time]];
+    
+    UIFont *font = [UIFont systemFontOfSize:17.0];
+    CGSize size2 = size2 = [content sizeWithFont:font constrainedToSize:CGSizeMake(self.frame.size.width - 30, 10000) lineBreakMode:NSLineBreakByWordWrapping];
+    
+    [contentLabel setText:content];
+    [contentLabel setFrame:CGRectMake(contentLabel.frame.origin.x, contentLabel.frame.origin.y, self.frame.size.width - 30, size2.height)];
+    
+    NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
+    BOOL ShowAttachments = [defaults boolForKey:@"ShowAttachments"];
+    if (ShowAttachments) {
+        NSArray * picArray = [self getPicList];
+        for (int i = 0; i < [picArray count]; i++) {
+            Attachment * att = [picArray objectAtIndex:i];
+            ImageAttachmentView * imageAttachmentView = [[ImageAttachmentView alloc] initWithFrame:CGRectMake((self.frame.size.width - 320)/2, i*400 + contentLabel.frame.origin.y + size2.height + 10, 320, 400)];
+            [imageAttachmentView setAttachmentURL:[NSURL URLWithString:att.attUrl] NameText:att.attFileName];
+            imageAttachmentView.indexNum = i;
+            imageAttachmentView.mDelegate = self;
+            [self addSubview:imageAttachmentView];
+            [attachmentsViewArray addObject:imageAttachmentView];
+        }
+        
+        NSArray * docArray = [self getDocList];
+        for (int i = 0; i < [docArray count]; i++) {
+            Attachment * att = [docArray objectAtIndex:i];
+            AttachmentView * attachmentView = [[AttachmentView alloc] initWithFrame:CGRectMake((self.frame.size.width - 290)/2, i*60 + [picArray count]*400 + contentLabel.frame.origin.y + size2.height + 10, 290, 50)];
+            [attachmentView setAttachment:att.attFileName NameText:att.attFileName];
+            attachmentView.isPhoto = NO;
+            attachmentView.indexNum = i;
+            attachmentView.mDelegate = self;
+            [self addSubview:attachmentView];
+            [attachmentsViewArray addObject:attachmentView];
+        }
+    }
+    else
+    {
+        NSArray * picArray = [self getPicList];
+        for (int i = 0; i < [picArray count]; i++) {
+            Attachment * att = [picArray objectAtIndex:i];
+            AttachmentView * attachmentView = [[AttachmentView alloc] initWithFrame:CGRectMake((self.frame.size.width - 290)/2, i*60 + contentLabel.frame.origin.y + size2.height + 10, 290, 50)];
+            [attachmentView setAttachment:att.attFileName NameText:att.attFileName];
+            attachmentView.isPhoto = YES;
+            attachmentView.indexNum = i;
+            attachmentView.mDelegate = self;
+            [self addSubview:attachmentView];
+            [attachmentsViewArray addObject:attachmentView];
+        }
+        
+        NSArray * docArray = [self getDocList];
+        for (int i = 0; i < [docArray count]; i++) {
+            Attachment * att = [docArray objectAtIndex:i];
+            AttachmentView * attachmentView = [[AttachmentView alloc] initWithFrame:CGRectMake((self.frame.size.width - 290)/2, i*60 + [picArray count]*60 + contentLabel.frame.origin.y + size2.height + 10, 290, 50)];
+            [attachmentView setAttachment:att.attFileName NameText:att.attFileName];
+            attachmentView.isPhoto = NO;
+            attachmentView.indexNum = i;
+            attachmentView.mDelegate = self;
+            [self addSubview:attachmentView];
+            [attachmentsViewArray addObject:attachmentView];
+        }
+    }
+    
+    [self attachLongPressHandler];
 }
 
 @end

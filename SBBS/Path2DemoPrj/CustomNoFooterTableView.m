@@ -22,19 +22,18 @@
     {
         // Initialization code
         mTableView = [[UITableView alloc] initWithFrame:self.bounds];
-        mTableView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
         mTableView.dataSource = self;
         mTableView.delegate = self;
         mTableView.directionalLockEnabled = YES;
         mTableView.decelerationRate = 0;
-        mTableViewContentHeight = mTableView.bounds.size.height;
         mTableViewCellNum = 0;
+        [mTableView setClipsToBounds:NO];
         
-        mRefreshTableHeaderView = [[RefreshTableHeaderView alloc] initWithFrame:CGRectMake(0.0f, -mTableView.bounds.size.height, mTableView.bounds.size.width, mTableView.bounds.size.height)];
+        mRefreshTableHeaderView = [[RefreshTableHeaderView alloc] initWithFrame:CGRectMake(0.0f, -mTableView.frame.size.height, mTableView.bounds.size.width, mTableView.bounds.size.height)];
         mRefreshTableHeaderView.delegate = self;
         [mTableView addSubview:mRefreshTableHeaderView];
         
-        mRefreshTableFooterView = [[RefreshTableFooterView alloc] initWithFrame:CGRectMake(0.0f, mTableView.bounds.size.height, mTableView.bounds.size.width, mTableView.bounds.size.height) SuperScollHeight:mTableView.bounds.size.height];
+        mRefreshTableFooterView = [[RefreshTableFooterView alloc] initWithFrame:CGRectMake(0.0f, mTableView.frame.size.height, mTableView.bounds.size.width, mTableView.bounds.size.height) SuperScollHeight:mTableView.bounds.size.height];
         mRefreshTableFooterView.delegate = self;
         //[mTableView addSubview:mRefreshTableFooterView];
         
@@ -45,10 +44,12 @@
     }
     return self;
 }
+
 -(void)removeFooterView
 {
     [mRefreshTableFooterView removeFromSuperview];
 }
+
 -(void)dealloc
 {
     [mRefreshTableHeaderView release];
@@ -59,19 +60,23 @@
 }
 
 /**************************  tableview Delegate ***************************/
+-(NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
+    if([mDelegate respondsToSelector:@selector(sectionIndexTitlesForTableView:)])
+        return [mDelegate sectionIndexTitlesForTableView:tableView];
+    else {
+        return nil;
+    }
+    return nil;
+}
+
+
 -(NSInteger) numberOfSectionsInTableView:(UITableView *)tableView
 {
     if([mDelegate respondsToSelector:@selector(numberOfSectionsInTableView:)])
         return [mDelegate numberOfSectionsInTableView:tableView];
     else {
         return 1;
-    }
-}
-- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
-    if([mDelegate respondsToSelector:@selector(tableView:titleForHeaderInSection:)])
-        return [mDelegate tableView:tableView titleForHeaderInSection:section];
-    else {
-        return @"";
     }
 }
 
@@ -131,7 +136,6 @@
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
-    [mDelegate scrollViewDidScroll];
     mContentOffset = scrollView.contentOffset.y;
     [mRefreshTableHeaderView refreshScrollViewDidScroll:scrollView];
     //[mRefreshTableFooterView refreshScrollViewDidScroll:scrollView];
@@ -139,18 +143,14 @@
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
-    [mDelegate scrollViewDidEndDragging:decelerate];
     [mRefreshTableHeaderView refreshScrollViewDidEndDragging:scrollView];
-    //[mRefreshTableFooterView refreshScrollViewDidEndDragging:scrollView];
 }
 
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-    [mDelegate scrollViewDidEndDecelerating];
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
-    [mDelegate scrollViewWillBeginDragging];
 }
 
 
@@ -160,7 +160,7 @@
     isHeaderDataLoading = YES;
     if([mDelegate respondsToSelector:@selector(refreshTableHeaderDidTriggerRefresh:)])
     {
-        [mDelegate refreshTableHeaderDidTriggerRefresh:mTableView];
+        [mDelegate refreshTableHeaderDidTriggerRefresh:(RefreshTableHeaderView *)mTableView];
     }
 }
 
@@ -179,7 +179,7 @@
 {
     isFooterDataLoading = YES;
     if([mDelegate respondsToSelector:@selector(refreshTableFooterDidTriggerRefresh:)])
-        [mDelegate refreshTableFooterDidTriggerRefresh:mTableView];
+        [mDelegate refreshTableFooterDidTriggerRefresh:(RefreshTableFooterView *)mTableView];
 }
 
 - (BOOL)refreshTableFooterDataSourceIsLoading:(RefreshTableFooterView*)view

@@ -10,6 +10,7 @@
 #import "AppDelegate.h"
 
 #define kTriggerOffSet 100.0f
+#define homeViewOffSet 220.0f
 
 /////////////////////////////////////
 @interface HomeViewController () 
@@ -23,91 +24,94 @@
 @synthesize realViewController;
 @synthesize mDelegate;
 
-/*
-#pragma mark -
-#pragma mark Override touch methods
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
-    UITouch *touch=[touches anyObject];
-    touchBeganPoint = [touch locationInView:[[UIApplication sharedApplication] keyWindow]];
-}
 
-// Scale or move select view when touch moved (Add by Ethan, 2011-11-27)
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event{
-    UITouch *touch = [touches anyObject];
-    CGPoint touchPoint = [touch locationInView:[[UIApplication sharedApplication] keyWindow]];
-    
-    CGFloat xOffSet = touchPoint.x - touchBeganPoint.x;
-    
-    if (xOffSet >= 0 && xOffSet <= 290) {
-        self.navigationController.view.frame = CGRectMake(xOffSet, 
-                                                      self.navigationController.view.frame.origin.y, 
-                                                      self.navigationController.view.frame.size.width, 
-                                                      self.navigationController.view.frame.size.height);
+- (BOOL)gestureRecognizerShouldBegin:(UIPanGestureRecognizer *)gestureRecognizer
+{
+     CGPoint translation = [gestureRecognizer translationInView:[[UIApplication sharedApplication] keyWindow]];
+ 
+     if (sqrt(translation.x * translation.x) / sqrt(translation.y * translation.y) > 1)
+     {
+        return YES;
+     }
+     return NO;
+}
+ 
+- (void)handlePanFrom:(UIPanGestureRecognizer*)recognizer {
+    if (recognizer.state == UIGestureRecognizerStateBegan) {
+        ;
     }
-}
-
-// reset indicators when touch ended (Add by Ethan, 2011-11-27)
--(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    // animate to left side
-    if (self.navigationController.view.frame.origin.x < -kTriggerOffSet) 
-    {}
-    else if (self.navigationController.view.frame.origin.x > kTriggerOffSet)
-         {
-            AppDelegate * appdelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-            if (appdelegate.isSearching) {
-                [appdelegate showLeftViewTotaly];
+    else if (recognizer.state == UIGestureRecognizerStateEnded) {
+            if (self.navigationController.view.frame.origin.x < -kTriggerOffSet)
+            {
+            
+            }
+            else if (self.navigationController.view.frame.origin.x > kTriggerOffSet)
+            {
+                AppDelegate * appdelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+                if (appdelegate.isSearching) {
+                    [appdelegate showLeftViewTotaly];
             }
             else {
                 [self moveToRightSide];
             }
-         }
-        else 
+        }
+        else
             [self restoreViewLocation];
+    }
+    else if (recognizer.state == UIGestureRecognizerStateChanged) {
+         CGFloat xOffSet = [recognizer translationInView:[[UIApplication sharedApplication] keyWindow]].x;
+         if (xOffSet >= 0 && xOffSet <= 320) {
+             self.navigationController.view.frame = CGRectMake(xOffSet,
+                                                           self.navigationController.view.frame.origin.y,
+                                                           self.navigationController.view.frame.size.width,
+                                                           self.navigationController.view.frame.size.height);
+         }
+     }
 }
-*/
-
 
 - (void)awakeFromNib {
-    self.realViewController = [[TopTenViewController alloc] initWithNibName:@"TopTenViewController" bundle:nil];
-    [self showViewController:@"今日十大"];
+    UIPanGestureRecognizer* recognizer;
+    recognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePanFrom:)];
+    recognizer.delegate = self;
+    [self.view addGestureRecognizer:recognizer];
+    
+    if (IS_IOS7) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+    }
+    
+    CGRect rect = [[UIScreen mainScreen] bounds];
+    self.realViewController = [[TopTenViewController alloc] init];
+    [self.realViewController.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
+    [self showViewController:@"热门帖子"];
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
+    [self.view setBackgroundColor:[UIColor whiteColor]];
     
-    NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
-    BOOL * isNotFirstLoad = [defaults boolForKey:@"isNotFirstLoad"];
-    if (!isNotFirstLoad) {
-        firstLoadImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 320, 568)];
-        [firstLoadImageView setImage:[UIImage imageNamed:@"techImage1.png"]];
-        [self performSelector:@selector(dismissTechImage) withObject:nil afterDelay:2.5];
-        [self.view addSubview:firstLoadImageView];
+    if (IS_IOS7) {
     }
-}
-
--(void)dismissTechImage
-{
-    NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setBool:YES forKey:@"isNotFirstLoad"];
-    [UIView beginAnimations:nil context:nil];
-    [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
-    [UIView setAnimationDuration:0.3];
-    [firstLoadImageView setAlpha:0];
-    [UIView commitAnimations];
+    else
+    {
+        [self.navigationController.navigationBar setTintColor:[UIColor lightGrayColor]];
+    }
+    
+    UIBarButtonItem *menuButton = [[UIBarButtonItem alloc] initWithTitle:@"菜单" style:UIBarButtonItemStyleBordered target:self action:@selector(leftBarBtnTapped:)];
+    self.navigationItem.leftBarButtonItem = menuButton;
 }
 
 #pragma mark - Rotation
 -(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
-    return NO;
+    return YES;
 }
 - (BOOL)shouldAutorotate{
-    return NO;
+    return YES;
 }
 -(NSUInteger)supportedInterfaceOrientations{
-    return UIInterfaceOrientationMaskPortrait;
+    return UIInterfaceOrientationMaskAllButUpsideDown;
 }
+
 
 #pragma mark -
 #pragma mark Other methods
@@ -125,30 +129,18 @@
                              [overView removeFromSuperview];
                      }];
 }
-- (void)firstrestoreViewLocation {
-    homeViewIsOutOfStage = NO;
-    [UIView animateWithDuration:0.7 
-                     animations:^{
-                         self.navigationController.view.frame = CGRectMake(0, self.navigationController.view.frame.origin.y, self.navigationController.view.frame.size.width, self.navigationController.view.frame.size.height);
-                     } 
-                     completion:^(BOOL finished){
-                         UIControl *overView = (UIControl *)[[[UIApplication sharedApplication] keyWindow] viewWithTag:10086];
-                         if (overView != nil)
-                             [overView removeFromSuperview];
-                     }];
-}
 
 // move view to right side
 - (void)moveToRightSide {
     homeViewIsOutOfStage = YES;
-    [self animateHomeViewToSide:CGRectMake(290.0f, 
+    [self animateHomeViewToSide:CGRectMake(homeViewOffSet,
                                            self.navigationController.view.frame.origin.y, 
                                            self.navigationController.view.frame.size.width, 
                                            self.navigationController.view.frame.size.height)];
 }
 - (void)moveToRightSideTotaly {
     homeViewIsOutOfStage = YES;
-    [self animateHomeViewToSideTotaly:CGRectMake(340.0f, 
+    [self animateHomeViewToSideTotaly:CGRectMake(self.view.frame.size.width + 20,
                                            self.navigationController.view.frame.origin.y, 
                                            self.navigationController.view.frame.size.width, 
                                            self.navigationController.view.frame.size.height)];
@@ -203,12 +195,13 @@
 {
     if (self.realViewController != nil) {
         [self.realViewController.view removeFromSuperview];
+        self.navigationItem.rightBarButtonItem = nil;
+        self.navigationItem.rightBarButtonItems = nil;
     }
 }
 - (void)showViewController:(NSString *)topTitleString
 {
-    [topTitle setText:topTitleString];
-    //[self.realViewController.view setFrame:CGRectMake(10, 0, 320, 460)];
+    self.title = topTitleString;
     [self.view insertSubview:self.realViewController.view atIndex:0];
 }
 
@@ -216,24 +209,14 @@
 #pragma mark TopTenViewController delegate
 -(void)topTenCellSelected:(Topic *)topic
 {
-    SingleTopicViewController * singleTopicViewController = [[SingleTopicViewController alloc] initWithNibName:@"SingleTopicViewController" bundle:nil];
-    singleTopicViewController.rootTopic = topic;
+    SingleTopicViewController * singleTopicViewController = [[SingleTopicViewController alloc] initWithRootTopic:topic];
     [self.navigationController pushViewController:singleTopicViewController animated:YES];
-    ////modified by joe//////
 }
 
 
 -(void)dismissPostTopicView
 {
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
-
-- (IBAction)changeMode:(id)sender
-{
-    mDelegate = realViewController;
-    if ([mDelegate respondsToSelector:@selector(changeReadMode)]) {
-        [mDelegate changeReadMode];
-    }
-}
 @end

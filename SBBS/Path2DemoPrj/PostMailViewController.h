@@ -16,32 +16,27 @@
 @end
 
 
-@interface PostMailViewController : UIViewController
-{
-    IBOutlet UILabel * topTitleLabel;
+@interface PostMailViewController : UIViewController <UITextFieldDelegate, UIScrollViewDelegate, UITextViewDelegate>
+{    
+    UITextField * postUser;
+    UIButton * addUserButton;
     
-    IBOutlet UITextField * postUser;
-    IBOutlet UIButton * addUserButton;
-    IBOutlet UIButton * sendButton;
+    UITextField * postTitle;
+    UILabel * postTitleCount;
     
-    IBOutlet UITextField * postTitle;
-    IBOutlet UILabel * postTitleCount;
-    
-    IBOutlet UIImageView * postBack;
-    IBOutlet UITextView * postContent;
-    
+    UITextView * postContent;
+    UIScrollView * postScrollView;
     MBProgressHUD * HUD;
     Mail * rootMail;
     NSString * sentToUser;
     int postType; // 发表类型，0发新邮件，1回复邮件，2已指定发件人
     MyBBS * myBBS;
-    id __unsafe_unretained mDelegate;
 }
 @property(nonatomic, strong)Mail * rootMail;
 @property(nonatomic, strong)NSString * sentToUser;
 @property(nonatomic, assign)int postType;
-@property(nonatomic, unsafe_unretained)id mDelegate;
 
--(IBAction)cancel:(id)sender;
--(IBAction)sent:(id)sender;
+-(IBAction)inputTitle:(id)sender;
+-(void)cancel;
+-(void)send;
 @end

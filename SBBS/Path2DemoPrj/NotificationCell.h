@@ -11,7 +11,7 @@
 @interface NotificationCell : UITableViewCell
 {
     UILabel * notificationCount;
-    UIImageView * notificationImageView;
+    UILabel * notificationView;
     Notification * notification;
 }
 @property(nonatomic, strong)Notification * notification;

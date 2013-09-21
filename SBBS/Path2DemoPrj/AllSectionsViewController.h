@@ -9,27 +9,22 @@
 #import <UIKit/UIKit.h>
 #import "HomeViewController.h"
 #import "AppDelegate.h"
-#import "CustomTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
+#import "CustomNoFooterTableView.h"
 #import "BoardsCellView.h"
 #import "TopicsViewController.h"
-#import "SectionTopTenViewController.h"
 #import "DataModel.h"
 #import "WBUtil.h"
 #import "BBSAPI.h"
 #import "MyBBS.h"
 
 
-@interface AllSectionsViewController : UIViewController<TimeScrollerDelegate, MBProgressHUDDelegate, UITableViewDataSource, UITableViewDelegate>
+@interface AllSectionsViewController : UIViewController<MBProgressHUDDelegate, UITableViewDataSource, UITableViewDelegate>
 {
     NSArray * topTenArray;
     CustomNoFooterTableView * customTableView;
     UITableView * normalTableView;
-    MBProgressHUD * HUD;
-    
+    FPActivityView* activityView;
     NSString * topTitleString;
-    
     MyBBS * myBBS;
     BOOL isMenu;
     BOOL isForSectionTopTen;
@@ -38,6 +33,6 @@
 @property(nonatomic, strong)NSString * topTitleString;
 @property(nonatomic, assign)BOOL isMenu;
 @property(nonatomic, assign)BOOL isForSectionTopTen;
--(IBAction)back:(id)sender;
+
 -(IBAction)addFavDirect:(id)sender;
 @end

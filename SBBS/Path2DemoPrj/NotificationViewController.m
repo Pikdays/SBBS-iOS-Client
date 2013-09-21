@@ -9,18 +9,17 @@
 #import "NotificationViewController.h"
 @implementation NotificationViewController
 @synthesize showNotificationArray;
+@synthesize seg;
+@synthesize commentNotificationImageView;
+@synthesize atNotificationImageView;
+@synthesize mailNotificationImageView;
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id)init
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super init];
     if (self) {
     }
     return self;
-}
--(IBAction)back:(id)sender
-{
-    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    [appDelegate.homeViewController leftBarBtnTapped:nil];
 }
 
 - (void)viewDidLoad
@@ -28,56 +27,72 @@
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
     [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
+    self.view.backgroundColor = [UIColor whiteColor];
+    
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    
+    UIToolbar * toolbar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 44)];
+    NSArray * itemArray = [NSArray arrayWithObjects:@"回复", @"@我", @"邮件", nil];
+    self.seg = [[UISegmentedControl alloc] initWithItems:itemArray];
+    [seg setSelectedSegmentIndex:0];
+    [seg setFrame:CGRectMake(6, 7, self.view.frame.size.width - 10, 30)];
+    [seg addTarget:self action:@selector(segmentControlValueChanged:) forControlEvents:UIControlEventValueChanged];
+    [toolbar addSubview:seg];
+    
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
+        self.commentNotificationImageView = [[UIImageView alloc] initWithFrame:CGRectMake(85, 17, 10, 10)];
+        self.atNotificationImageView = [[UIImageView alloc] initWithFrame:CGRectMake(188, 17, 10, 10)];
+        self.mailNotificationImageView = [[UIImageView alloc] initWithFrame:CGRectMake(290, 17, 10, 10)];
+    }
+    else {
+        self.commentNotificationImageView = [[UIImageView alloc] initWithFrame:CGRectMake(200, 17, 10, 10)];
+        self.atNotificationImageView = [[UIImageView alloc] initWithFrame:CGRectMake(470, 17, 10, 10)];
+        self.mailNotificationImageView = [[UIImageView alloc] initWithFrame:CGRectMake(730, 17, 10, 10)];
+    }
+    
+    
+    
+    [commentNotificationImageView setBackgroundColor:[UIColor redColor]];
+    [atNotificationImageView setBackgroundColor:[UIColor redColor]];
+    [mailNotificationImageView setBackgroundColor:[UIColor redColor]];
+    
+    commentNotificationImageView.layer.cornerRadius = 5.0f;
+    commentNotificationImageView.clipsToBounds = YES;
+    atNotificationImageView.layer.cornerRadius = 5.0f;
+    atNotificationImageView.clipsToBounds = YES;
+    mailNotificationImageView.layer.cornerRadius = 5.0f;
+    mailNotificationImageView.clipsToBounds = YES;
+    
+    
+    if (!IS_IOS7) {
+        [seg setSegmentedControlStyle:UISegmentedControlStyleBar];
+        [seg setTintColor:[UIColor lightGrayColor]];
+        [toolbar setTintColor:[UIColor lightGrayColor]];
+    }
+    
+    [toolbar addSubview:commentNotificationImageView];
+    [toolbar addSubview:atNotificationImageView];
+    [toolbar addSubview:mailNotificationImageView];
+    [self.view addSubview:toolbar];
+    
+    UIBarButtonItem *clearButton=[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemTrash target:self action:@selector(clearAll:)];
+    //UIBarButtonItem *clearButton=[[UIBarButtonItem alloc] initWithTitle:@"清空" style:UIBarButtonItemStylePlain target:self action:@selector(clearAll:)];
+    appDelegate.homeViewController.navigationItem.rightBarButtonItem = clearButton;
+    
     myBBS = appDelegate.myBBS;
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
-    customTableView = [[CustomNoFooterTableView alloc] initWithFrame:CGRectMake(0, 88, self.view.frame.size.width, self.view.frame.size.height - 108) Delegate:self];
+    customTableView = [[CustomNoFooterTableView alloc] initWithFrame:CGRectMake(0, 44, self.view.frame.size.width, self.view.frame.size.height - 108) Delegate:self];
     [self.view insertSubview:customTableView atIndex:0];
     [self refreshTableView];
-    
-    UISwipeGestureRecognizer* recognizer;
-    recognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(back:)];
-    recognizer.direction = UISwipeGestureRecognizerDirectionRight;
-    [self.view addGestureRecognizer:recognizer];
 }
 
 - (void)viewDidUnload
 {
     [super viewDidUnload];
-    
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
 }
 -(void)dealloc
 {
     customTableView = nil;
-    
 }
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    return (interfaceOrientation == UIInterfaceOrientationPortrait);
-}
-
-#pragma mark UIScrollViewDelegateMethods
-//The TimeScroller needs to know what's happening with the UITableView (UIScrollView)
-- (void)scrollViewDidScroll{
-  
-}
-
-- (void)scrollViewDidEndDecelerating{
-    
-}
-
-- (void)scrollViewWillBeginDragging{
-  
-}
-
-- (void)scrollViewDidEndDragging:(BOOL)decelerate{
-    if (!decelerate) {
-     
-    }
-}
-
 
 #pragma mark - 
 #pragma mark tableViewDelegate
@@ -94,11 +109,10 @@
             NSArray * array = [[NSBundle mainBundle] loadNibNamed:@"MailsViewCell" owner:self options:nil];
             cell = [array objectAtIndex:0];
         }
+        [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
         
         Mail * mail = [myBBS.notification.mails objectAtIndex:indexPath.row];
         cell.mail = mail;
-        [cell setReadyToShow];
-        
         return cell;
     }
     
@@ -108,14 +122,14 @@
             NSArray * array = [[NSBundle mainBundle] loadNibNamed:@"TopTenTableViewCell" owner:self options:nil];
             cell = [array objectAtIndex:0];
         }
-    
+        [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
+        
         Topic * topic = [myBBS.notification.ats objectAtIndex:indexPath.row];
         cell.ID = topic.ID;
         cell.title = topic.title;
         cell.author = topic.author;
         cell.board = topic.board;
         cell.unread = YES;
-        [cell setReadyToShow];
         return cell;
     }
     
@@ -125,6 +139,7 @@
             NSArray * array = [[NSBundle mainBundle] loadNibNamed:@"TopTenTableViewCell" owner:self options:nil];
             cell = [array objectAtIndex:0];
         }
+        [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
         
         Topic * topic = [myBBS.notification.replies objectAtIndex:indexPath.row];
         cell.ID = topic.ID;
@@ -132,7 +147,6 @@
         cell.author = topic.author;
         cell.board = topic.board;
         cell.unread = YES;
-        [cell setReadyToShow];
         return cell;
     }
     return nil;
@@ -141,7 +155,7 @@
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath   
 {
     if (seg.selectedSegmentIndex == 2) {
-        return 70;
+        return 66;
     }
     return 80;
 }
@@ -157,13 +171,11 @@
         singleMailViewController.mDelegate = self;
         
         AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-        [appDelegate refreshNotification];
         HomeViewController * home = appDelegate.homeViewController;
         [home.navigationController pushViewController:singleMailViewController animated:YES];
     }
     if (seg.selectedSegmentIndex == 1) {
-        SingleTopicViewController * singleTopicViewController = [[SingleTopicViewController alloc] initWithNibName:@"SingleTopicViewController" bundle:nil];
-        singleTopicViewController.rootTopic = [myBBS.notification.ats objectAtIndex:indexPath.row];
+        SingleTopicViewController * singleTopicViewController = [[SingleTopicViewController alloc] initWithRootTopic:[myBBS.notification.ats objectAtIndex:indexPath.row]];
         singleTopicViewController.isForShowNotification = YES;
         singleTopicViewController.mDelegate = self;
         
@@ -172,8 +184,7 @@
         [home.navigationController pushViewController:singleTopicViewController animated:YES];
     }
     if (seg.selectedSegmentIndex == 0) {
-        SingleTopicViewController * singleTopicViewController = [[SingleTopicViewController alloc] initWithNibName:@"SingleTopicViewController" bundle:nil];
-        singleTopicViewController.rootTopic = [myBBS.notification.replies objectAtIndex:indexPath.row];
+        SingleTopicViewController * singleTopicViewController = [[SingleTopicViewController alloc] initWithRootTopic:[myBBS.notification.replies objectAtIndex:indexPath.row]];
         singleTopicViewController.isForShowNotification = YES;
         singleTopicViewController.mDelegate = self;
         
@@ -215,7 +226,7 @@
 {
     [myBBS clearNotification];
     [myBBS refreshNotification];
-    [self refreshTableView];
+    [self refreshTable];
     [HUD removeFromSuperview];
     HUD = nil;
 }
@@ -232,9 +243,8 @@
 -(void)refreshTable
 {
     @autoreleasepool {
-        [myBBS refreshNotification];
         AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-        [appDelegate refreshTableView];
+        [appDelegate refreshNotification];
         [self performSelectorOnMainThread:@selector(refreshTableView) withObject:nil waitUntilDone:NO];
     }
 }
@@ -287,5 +297,16 @@
 -(IBAction)segmentControlValueChanged:(id)sender
 {
     [self refreshTableView];
+}
+
+#pragma mark - Rotation
+-(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
+    return YES;
+}
+- (BOOL)shouldAutorotate{
+    return YES;
+}
+-(NSUInteger)supportedInterfaceOrientations{
+    return UIInterfaceOrientationMaskAllButUpsideDown;
 }
 @end

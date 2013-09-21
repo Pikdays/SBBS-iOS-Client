@@ -7,8 +7,6 @@
 //
 
 #import "UploadAttachmentsViewController.h"
-
-
 @implementation UploadAttachmentsViewController
 @synthesize mDelegate;
 @synthesize postType;
@@ -17,43 +15,74 @@
 @synthesize image;
 @synthesize postId;
 @synthesize photos = _photos;
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+
+- (id)init
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super init];
     if (self) {
-        // Custom initialization
     }
     return self;
 }
 
--(void) refreshAttlist
+-(void) firstTimeLoad
 {
     if (postType==0 || postType==1) {//新帖或回复
-        //attList=[[NSArray alloc] init];
-        attList=[BBSAPI getAttachmentsFromTopic:-1 andBoard:nil token:myBBS.mySelf.token];
+        self.attList = [BBSAPI getAttachmentsFromTopic:-1 andBoard:nil token:myBBS.mySelf.token];
     }
-    else
-    {//修改
-        attList=[BBSAPI getAttachmentsFromTopic:postId andBoard:board token:myBBS.mySelf.token];
+    else {  //修改
+        self.attList = [BBSAPI getAttachmentsFromTopic:postId andBoard:board token:myBBS.mySelf.token];
     }
-    [HUD removeFromSuperview];
-    HUD = nil;
+    
     [attTable reloadData];
+    
+    [activityView removeFromSuperview];
+    activityView = nil;
 }
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
-    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
-    attTable.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
+    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height - 64)];
+    [self.view setBackgroundColor:[UIColor whiteColor]];
+    self.title = @"编辑附件";
+    
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     myBBS = appDelegate.myBBS;
-    HUD = [[MBProgressHUD alloc] initWithView:self.view];
-	[self.view insertSubview:HUD atIndex:0];
-	HUD.labelText = @"载入中...";
-	[HUD showWhileExecuting:@selector(refreshAttlist) onTarget:self withObject:nil animated:YES];
     
+    NSArray *rightItemsArray;
+    UIBarButtonItem *pickFromAlbumButton = [[UIBarButtonItem alloc] initWithTitle:@"相册" style:UIBarButtonItemStylePlain target:self action:@selector(pickImageFromAlbum:)];
     
+    if([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+        UIBarButtonItem *pickFromCameraButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCamera target:self action:@selector(pickImageFromCamera:)];
+        rightItemsArray = [NSArray arrayWithObjects:pickFromCameraButton, pickFromAlbumButton, nil];
+    }
+    else{
+        rightItemsArray = [NSArray arrayWithObjects:pickFromAlbumButton, nil];
+    }
+    
+    UIBarButtonItem *doneButton=[[UIBarButtonItem alloc] initWithTitle:@"完成" style:UIBarButtonItemStyleDone target:self action:@selector(cancel:)];
+    self.navigationItem.leftBarButtonItem = doneButton;
+    self.navigationItem.rightBarButtonItems = rightItemsArray;
+
+    
+    if (IS_IOS7) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+        attTable = [[UITableView alloc] initWithFrame:CGRectMake(0, 64, self.view.frame.size.width, self.view.frame.size.height)];
+        
+        activityView = [[FPActivityView alloc] initWithFrame:CGRectMake(0, 64, self.view.frame.size.width, 1)];
+    }
+    else {
+        attTable = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height)];
+        activityView = [[FPActivityView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 1)];
+    }
+    attTable.delegate = self;
+    attTable.dataSource = self;
+    [self.view addSubview:attTable];
+    
+    [activityView start];
+    [self.view addSubview:activityView];
+    [self performSelectorInBackground:@selector(firstTimeLoad) withObject:nil];
 }
 
 - (void)didReceiveMemoryWarning
@@ -64,30 +93,41 @@
 
 -(IBAction)cancel:(id)sender
 {
-    //[mDelegate passValue:attList];
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (IBAction)pickImageFromAlbum:(id)sender
 {
-    DLCImagePickerController *picker = [[DLCImagePickerController alloc] init];
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
     picker.delegate = self;
-    [self presentModalViewController:picker animated:YES];
+    [self presentViewController:picker animated:YES completion:nil];
 }
 
-
--(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+- (IBAction)pickImageFromCamera:(id)sender
 {
-    return [attList count];
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+    picker.delegate = self;
+    [self presentViewController:picker animated:YES completion:nil];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [self.attList count];
 }
 
 -(UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell * cell=[[UITableViewCell alloc] init];
-    cell.textLabel.text=[[attList objectAtIndex:indexPath.row] attFileName];
+    static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell = (UITableViewCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+	}
+    [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
+    
+    cell.textLabel.text=[[self.attList objectAtIndex:indexPath.row] attFileName];
     [cell.textLabel setLineBreakMode:NSLineBreakByTruncatingMiddle];
-    [cell.textLabel setShadowOffset:CGSizeMake(0, 1)];
-    [cell.textLabel setShadowColor:[UIColor colorWithRed:1 green:1 blue:1 alpha:1]];
     return cell;
 }
 
@@ -107,7 +147,6 @@
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
-    UIAlertView *alert = nil;
     if(buttonIndex == [actionSheet destructiveButtonIndex]){//确定
         //NSLog(@"确定");
         //执行删除操作
@@ -117,51 +156,34 @@
     }
     else{
         //预览附件
-        [self previewAtt];
+        //[self previewAtt];
     }
 }
 
 //预览附件
 -(void) previewAtt
 {
-    NSString * curAttUrlString=[[attList objectAtIndex:curRow] attUrl];
+    NSString * curAttUrlString=[[self.attList objectAtIndex:curRow] attUrl];
     
-    if ([curAttUrlString hasSuffix:@".png"] || [curAttUrlString hasSuffix:@".jpg"] || [curAttUrlString hasSuffix:@".jpeg"] || [curAttUrlString hasSuffix:@".JPEG"] || [curAttUrlString hasSuffix:@".PNG"] || [curAttUrlString hasSuffix:@".JPG"]) {
+    if ([curAttUrlString hasSuffix:@".png"] || [curAttUrlString hasSuffix:@".jpg"] || [curAttUrlString hasSuffix:@".jpeg"] || [curAttUrlString hasSuffix:@".JPEG"] || [curAttUrlString hasSuffix:@".PNG"] || [curAttUrlString hasSuffix:@".JPG"] || [curAttUrlString hasSuffix:@".tiff"] || [curAttUrlString hasSuffix:@".TIFF"] || [curAttUrlString hasSuffix:@".bmp"] || [curAttUrlString hasSuffix:@".BMP"]) {
         
         NSMutableArray * photosArray = [[NSMutableArray alloc] init];
-        for (int i = 0; i < [attList count]; i++) {
-            NSString * attUrlString=[[attList objectAtIndex:i] attUrl];
-            if ([attUrlString hasSuffix:@".png"] || [attUrlString hasSuffix:@".jpg"] || [attUrlString hasSuffix:@".jpeg"] || [attUrlString hasSuffix:@".JPEG"] || [attUrlString hasSuffix:@".PNG"] || [attUrlString hasSuffix:@".JPG"])
-            [photosArray addObject:[MWPhoto photoWithURL:[NSURL URLWithString:attUrlString]]];
+        for (int i = 0; i < [self.attList count]; i++) {
+            NSString * attUrlString=[[self.attList objectAtIndex:i] attUrl];
+            if ([attUrlString hasSuffix:@".png"] || [attUrlString hasSuffix:@".jpg"] || [attUrlString hasSuffix:@".jpeg"] || [attUrlString hasSuffix:@".PNG"] || [attUrlString hasSuffix:@".JPG"] || [attUrlString hasSuffix:@".JPEG"] || [attUrlString hasSuffix:@".tiff"] || [attUrlString hasSuffix:@".TIFF"] || [attUrlString hasSuffix:@".bmp"] || [attUrlString hasSuffix:@".BMP"])
+            //[photosArray addObject:[MWPhoto photoWithURL:[NSURL URLWithString:attUrlString]]];
+                return;
         }
         self.photos = photosArray;
-        
-        MWPhotoBrowser * browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
-        browser.displayActionButton = YES;
-        [browser setInitialPageIndex:curRow];
-        //AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-        UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:browser];
-        nc.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-        [self presentViewController:nc animated:YES completion:nil];
     }
     else if ([curAttUrlString hasSuffix:@".gif"] || [curAttUrlString hasSuffix:@".GIF"]) {
-        ImageData * imageData = [[ImageData alloc] init];
-        imageData.url = curAttUrlString;
-        imageData.title = [[attList objectAtIndex:curRow] attFileName];
         
-        SingleImageWithScrollViewController * singleImageWithScrollViewController = [[SingleImageWithScrollViewController alloc] initWithNibName:@"SingleImageWithScrollViewController" bundle:nil];
-        singleImageWithScrollViewController.mDelegate = nil;
-        singleImageWithScrollViewController.imageData = imageData;
-        singleImageWithScrollViewController.isGIF = TRUE;
-        [singleImageWithScrollViewController loadBigImageView];
-        [self presentViewController:singleImageWithScrollViewController animated:YES completion:nil];
     }
     else{
         openString = curAttUrlString;
         UIAlertView * alert = [[UIAlertView alloc] initWithTitle:@"提示" message:@"用Safari打开此附件" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"好",nil];
         [alert show];
     }
-
 }
 
 //处理safari打开附件
@@ -182,7 +204,7 @@
 
 -(void)doDelete
 {
-    int attid=[[attList objectAtIndex:curRow] attId];
+    int attid=[[self.attList objectAtIndex:curRow] attId];
     NSString * delUrlString;
     if (postType==0 || postType==1) {//新帖或者回复
         delUrlString=[NSString stringWithFormat:@"http://bbs.seu.edu.cn/api/attachment/delete.js?token=%@&attid=%d",myBBS.mySelf.token,attid];
@@ -192,7 +214,7 @@
         delUrlString=[NSString stringWithFormat:@"http://bbs.seu.edu.cn/api/attachment/delete.js?token=%@&board=%@&id=%d&attid=%d",myBBS.mySelf.token,board,postId,attid];
     }
     NSURL *delUrl=[NSURL URLWithString:delUrlString];
-    attList=[BBSAPI delImg:delUrl];
+    self.attList = [BBSAPI delImg:delUrl];
     [attTable reloadData];
 }
 
@@ -200,7 +222,6 @@
 -(NSString *)stringWithUUID
 {
     CFUUIDRef uuidObj = CFUUIDCreate(kCFAllocatorDefault);
-    //NSString* uuidString = (NSString*)CFUUIDCreateString(kCFAllocatorDefault, uuidObj);
     CFStringRef strRef = CFUUIDCreateString(kCFAllocatorDefault, uuidObj);
     NSString* uuidString = [NSString stringWithString:(__bridge NSString*)strRef];
     CFRelease(strRef);
@@ -209,18 +230,17 @@
 }
 
 
--(void) imagePickerControllerDidCancel:(DLCImagePickerController *)picker{
-    [self dismissModalViewControllerAnimated:YES];
+-(void) imagePickerControllerDidCancel:(UIImagePickerController *)picker{
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 
-- (void) imagePickerController:(DLCImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+- (void) imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
 {
-    [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:NO];
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
 
-    self.image = [UIImage imageWithData:[info objectForKey:@"data"]];
-    imageFileName=[NSString stringWithFormat:@"%@.%@",[self stringWithUUID],@"JPG"];
+    self.image = [info objectForKey:UIImagePickerControllerOriginalImage];
+    imageFileName = [NSString stringWithFormat:@"%@.%@",[self stringWithUUID],@"JPG"];
     
     NSString *urlString;
     
@@ -232,7 +252,6 @@
     }
     theUrl=[NSURL URLWithString:urlString];
     
-    //NSArray *a=[[BBSAPI postImageto:theUrl withImage:image andToken:myBBS.mySelf.token] retain];
     HUD = [[MBProgressHUD alloc] initWithView:self.view];
 	[self.view insertSubview:HUD atIndex:5];
 	HUD.labelText = @"上传中...";
@@ -271,8 +290,7 @@
     int uploadImage = [defaults integerForKey:@"uploadImage"];
     UIImage * newImage = [self image:self.image fillSize:CGSizeMake(self.image.size.width/(uploadImage+1), self.image.size.height/(uploadImage+1))];
     
-    attList=[BBSAPI postImg:imageFileName Image:newImage toUrl:theUrl];
-    
+    self.attList = [BBSAPI postImg:imageFileName Image:newImage toUrl:theUrl];
     [HUD removeFromSuperview];
     [attTable reloadData];
 }
@@ -290,14 +308,4 @@
     return UIInterfaceOrientationMaskPortrait;
 }
 
-#pragma mark - MWPhotoBrowserDelegate
-- (NSUInteger)numberOfPhotosInPhotoBrowser:(MWPhotoBrowser *)photoBrowser {
-    return _photos.count;
-}
-
-- (MWPhoto *)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index {
-    if (index < _photos.count)
-        return [_photos objectAtIndex:index];
-    return nil;
-}
 @end

@@ -14,42 +14,20 @@
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]))
     {
-        self.clipsToBounds = YES;
-		
-		UIView *bgView = [[UIView alloc] init];
-		bgView.backgroundColor = [UIColor colorWithRed:(38.0f/255.0f) green:(44.0f/255.0f) blue:(58.0f/255.0f) alpha:1.0f];
-		self.selectedBackgroundView = bgView;
-		
-		self.imageView.contentMode = UIViewContentModeCenter;
-		
-        self.textLabel.font = [UIFont boldSystemFontOfSize:[UIFont systemFontSize] * 1.3f];
-		self.textLabel.shadowOffset = CGSizeMake(0.0f, 1.0f);
-		self.textLabel.shadowColor = [UIColor colorWithWhite:0.0f alpha:0.25f];
-		self.textLabel.textColor = [UIColor colorWithRed:(196.0f/255.0f) green:(204.0f/255.0f) blue:(218.0f/255.0f) alpha:1.0f];
-		
-		UIView *topLine = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, [UIScreen mainScreen].bounds.size.height, 1.0f)];
-		topLine.backgroundColor = [UIColor colorWithRed:(54.0f/255.0f) green:(61.0f/255.0f) blue:(76.0f/255.0f) alpha:1.0f];
-		[self.textLabel.superview addSubview:topLine];
-		
-		UIView *topLine2 = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 1.0f, [UIScreen mainScreen].bounds.size.height, 1.0f)];
-		topLine2.backgroundColor = [UIColor colorWithRed:(54.0f/255.0f) green:(61.0f/255.0f) blue:(77.0f/255.0f) alpha:1.0f];
-		[self.textLabel.superview addSubview:topLine2];
-		
-		UIView *bottomLine = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 43.0f, [UIScreen mainScreen].bounds.size.height, 1.0f)];
-		bottomLine.backgroundColor = [UIColor colorWithRed:(40.0f/255.0f) green:(47.0f/255.0f) blue:(61.0f/255.0f) alpha:1.0f];
-		[self.textLabel.superview addSubview:bottomLine];
+        [self.textLabel setText:@"新消息"];
         
-        notificationImageView = [[UIImageView alloc] initWithFrame:CGRectMake(258, 8, 28, 28)];
-        [notificationImageView setImage:[UIImage imageNamed:@"notification.png"]];
-        [self addSubview:notificationImageView];
+        notificationView = [[UILabel alloc] initWithFrame:CGRectMake(155, 5, 300, 34)];
+        [notificationView setBackgroundColor:[UIColor redColor]];
+        notificationView.layer.cornerRadius = 17.0f;
+        notificationView.clipsToBounds = YES;
+        [self addSubview:notificationView];
         
-        notificationCount = [[UILabel alloc] initWithFrame:CGRectMake(143, 11, 108, 21)];
+        notificationCount = [[UILabel alloc] initWithFrame:CGRectMake(125, 5, 42, 34)];
         notificationCount.backgroundColor = [UIColor clearColor];
-        notificationCount.font = [UIFont fontWithName:@"Helvetica" size:14.f];
-		notificationCount.shadowOffset = CGSizeMake(0.0f, 1.0f);
-		notificationCount.shadowColor = [UIColor colorWithWhite:0.0f alpha:0.25f];
-		notificationCount.textColor = [UIColor colorWithRed:(196.0f/255.0f) green:(204.0f/255.0f) blue:(218.0f/255.0f) alpha:1.0f];
-        notificationCount.textAlignment = UITextAlignmentRight;
+        notificationCount.font = [UIFont boldSystemFontOfSize:17];
+        notificationCount.textColor = [UIColor redColor];
+        notificationCount.highlightedTextColor = [UIColor redColor];
+        notificationCount.textAlignment = NSTextAlignmentLeft;
         [self addSubview:notificationCount];
     }
     return self;
@@ -58,7 +36,7 @@
 -(void)dealloc
 {
     notificationCount = nil;
-    notificationImageView = nil;
+    notificationView = nil;
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -68,42 +46,34 @@
 
 -(void)refreshCell
 {
-    //[self fadeOut];
     if (notification.count == 0) {
-        [notificationImageView setHidden:YES];
-        [notificationCount setText:@"无新消息"];
+        //[self stop];
+        [notificationView setHidden:YES];
+        [notificationCount setText:@""];
     }
     else {
-        [notificationImageView setHidden:NO];
-        [notificationCount setText:[NSString stringWithFormat:@"%i 条新消息", notification.count]];
+        //[notificationView setHidden:NO];
+        [notificationCount setText:[NSString stringWithFormat:@"%i", notification.count]];
+        [self start];
     }
 }
 
-
--(void)fadeOut
-{
-	[UIView beginAnimations:nil context:nil];
-	[UIView setAnimationDuration:1.0];
-	[UIView setAnimationDelegate:self];
-	[UIView setAnimationDidStopSelector:@selector(fadeIn)];
-    [notificationImageView setAlpha:0];
-	[UIView commitAnimations];
+-(void)start {
+    [notificationView.layer removeAllAnimations];
+    notificationView.transform = CGAffineTransformIdentity;
+    
+    [UIView animateWithDuration:1
+                          delay:0.0
+                        options:UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionRepeat|UIViewAnimationOptionAutoreverse
+                     animations:^{
+                         notificationView.transform = CGAffineTransformMakeTranslation(-20, 0);
+                     }
+                     completion:nil
+     ];
 }
 
--(void)fadeIn
-{
-    [UIView beginAnimations:nil context:nil];
-    [UIView setAnimationDuration:1.0];
-    [UIView setAnimationDelegate:self];
-    [UIView setAnimationDidStopSelector:@selector(fadeOut)];
-    [notificationImageView setAlpha:1];
-    [UIView commitAnimations];
+-(void)stop {
+    [notificationView.layer removeAllAnimations];
 }
 
-#pragma mark UIView
-- (void)layoutSubviews {
-	[super layoutSubviews];
-	//self.textLabel.frame = CGRectMake(50.0f, 0.0f, 200.0f, 43.0f);
-	//self.imageView.frame = CGRectMake(0.0f, 0.0f, 50.0f, 43.0f);
-}
 @end

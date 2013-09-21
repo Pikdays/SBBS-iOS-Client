@@ -37,20 +37,3 @@
 @property(nonatomic, retain) RefreshTableHeaderView * mRefreshTableHeaderView;
 @property(nonatomic, retain) RefreshTableFooterView * mRefreshTableFooterView;
 @end
-
-@protocol CustomTableViewDataDeleage 
-@required
--(NSInteger) numberOfSectionsInTableView:(UITableView *)tableView;
--(NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section;
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *) indexPath;
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;
-@end
-
-@protocol CustomTableViewDelegate 
-@required
-- (void)refreshTableHeaderDidTriggerRefresh:(UITableView *)tableView;
-- (void)refreshTableFooterDidTriggerRefresh:(UITableView *)tableView;
-@optional
--(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath;
--(void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath;
-@end

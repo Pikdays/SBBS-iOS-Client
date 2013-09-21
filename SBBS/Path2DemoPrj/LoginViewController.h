@@ -11,10 +11,7 @@
 #import "HomeViewController.h"
 #import "AppDelegate.h"
 #import "CustomTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
 #import "BoardsCellView.h"
-#import "MailsViewController.h"
 #import "FriendCellView.h"
 #import "DataModel.h"
 #import "WBUtil.h"
@@ -22,11 +19,16 @@
 #import "MyBBS.h"
 #import "PostMailViewController.h"
 
+@protocol LoginViewControllerDelegate <NSObject>
+-(void)LoginSuccess;
+@end
+
 @interface LoginViewController : UIViewController
 {
     IBOutlet UITextField * user;
     IBOutlet UITextField * pass;
     MBProgressHUD * HUD;
+    UIToolbar *keyboardToolbar;
     id mDelegate;
     MyBBS * myBBS;
 }

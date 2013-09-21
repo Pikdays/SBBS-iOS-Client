@@ -12,14 +12,11 @@
 #import <MessageUI/MessageUI.h>
 #import "CustomTableView.h"
 #import "PostMailViewController.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
 #import "SingleTopicCell.h"
 #import "DataModel.h"
 #import "WBUtil.h"
 #import "BBSAPI.h"
-#import "ASIHTTPRequest.h"
-#import "ASINetworkQueue.h"
+#import "UIImageView+WebCache.h"
 
 @interface UserInfoViewController : UIViewController
 {
@@ -27,11 +24,10 @@
     User * user;
     MyBBS * myBBS;
     MBProgressHUD * HUD;
-    ASINetworkQueue *networkQueue;
+    FPActivityView* activityView;
     BOOL failed;
     
-    IBOutlet UIView *userInfoWithoutAvatar;
-    IBOutlet UIView * userInfoWithAvatar;
+    IBOutlet UILabel * nameViewLabel;
     IBOutlet UIButton * sentMailButton;
     IBOutlet UIButton * addFriendButton;
     
@@ -48,7 +44,7 @@
     IBOutlet UILabel * gender; //性别，M为男性，F为女性（用户相关设置允许后显示）
     IBOutlet UILabel * astro; //星座（用户相关设置允许后显示)
     IBOutlet UIImageView * avatar;//用户头像
-    IBOutlet UIProgressView *progressIndicator;
+    IBOutlet UIView * avatarMask;
 }
 
 @property(nonatomic, strong)NSString * userString;
@@ -57,8 +53,6 @@
 -(IBAction)addFriend:(id)sender;
 -(IBAction)back:(id)sender;
 -(IBAction)sendMail:(id)sender;
-- (void)imageFetchComplete:(ASIHTTPRequest *)request;
-- (void)imageFetchFailed:(ASIHTTPRequest *)request;
 
 
 @end

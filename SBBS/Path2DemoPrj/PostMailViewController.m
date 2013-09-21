@@ -12,13 +12,11 @@
 @synthesize rootMail;
 @synthesize sentToUser;
 @synthesize postType;
-@synthesize mDelegate;
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id)init
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super init];
     if (self) {
-        // Custom initialization
     }
     return self;
 }
@@ -28,15 +26,70 @@
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
     [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
-    [postBack setFrame:CGRectMake(postBack.frame.origin.x, postBack.frame.origin.y, postBack.frame.size.width, rect.size.height - 376)];
-    [postContent setFrame:CGRectMake(postContent.frame.origin.x, postContent.frame.origin.y, postContent.frame.size.width, rect.size.height - 400)];
+    [self.view setBackgroundColor:[UIColor whiteColor]];
     
+    
+    UIBarButtonItem *cancelButton=[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancel)];
+    UIBarButtonItem *sendButton =[[UIBarButtonItem alloc] initWithTitle:@"发送" style:UIBarButtonItemStylePlain target:self action:@selector(send)];
+    
+    self.navigationItem.leftBarButtonItem = cancelButton;
+    self.navigationItem.rightBarButtonItem = sendButton;
     
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     myBBS = appDelegate.myBBS;
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
+    
+    if (IS_IOS7) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+        postScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 64, self.view.frame.size.width, self.view.frame.size.height - 64)];
+    }
+    else
+    {
+        [self.navigationController.navigationBar setTintColor:[UIColor lightGrayColor]];
+        postScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - 64)];
+    }
+    postScrollView.contentSize = CGSizeMake(rect.size.width, self.view.frame.size.height - 64 + 1);
+    postScrollView.delegate = self;
+    
+    UILabel * userLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 5, 40, 21)];
+    userLabel.textColor = [UIColor whiteColor];
+    userLabel.backgroundColor = [UIColor lightGrayColor];
+    userLabel.font = [UIFont systemFontOfSize:15];
+    userLabel.textAlignment = NSTextAlignmentCenter;
+    userLabel.text = @"发给";
+    postUser = [[UITextField alloc] initWithFrame:CGRectMake(60, 5, 205, 21)];
+    postUser.textColor = [UIColor lightGrayColor];
+    postUser.placeholder = @"添加收件人";
+    [postUser addTarget:self action:@selector(inputTitle:) forControlEvents:UIControlEventEditingChanged];
+    addUserButton = [UIButton buttonWithType:UIButtonTypeContactAdd];
+    [addUserButton setFrame:CGRectMake(285, 5, 21, 21)];
+    [addUserButton addTarget:self action:@selector(addUser:) forControlEvents:UIControlEventTouchUpInside];
+    [postScrollView addSubview:userLabel];
+    [postScrollView addSubview:postUser];
+    [postScrollView addSubview:addUserButton];
+    
+    UILabel * titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 30, 40, 21)];
+    titleLabel.textColor = [UIColor whiteColor];
+    titleLabel.backgroundColor = [UIColor lightGrayColor];
+    titleLabel.font = [UIFont systemFontOfSize:15];
+    titleLabel.textAlignment = NSTextAlignmentCenter;
+    titleLabel.text = @"标题";
+    postTitle = [[UITextField alloc] initWithFrame:CGRectMake(60, 30, 205, 21)];
+    postTitle.textColor = [UIColor lightGrayColor];
+    postTitle.placeholder = @"添加标题";
+    [postTitle addTarget:self action:@selector(inputTitle:) forControlEvents:UIControlEventEditingChanged];
+    postTitleCount = [[UILabel alloc] initWithFrame:CGRectMake(280, 30, 30, 21)];
+    postTitleCount.textColor = [UIColor lightGrayColor];
+    postTitleCount.textAlignment = NSTextAlignmentRight;
+    postContent = [[UITextView alloc] initWithFrame:CGRectMake(5, 55, self.view.frame.size.width - 10, self.view.frame.size.height - 64 - 55)];
+    [postContent setFont:[UIFont systemFontOfSize:17]];
+    [postScrollView addSubview:titleLabel];
+    [postScrollView addSubview:postTitle];
+    [postScrollView addSubview:postTitleCount];
+    [postScrollView addSubview:postContent];
+    [self.view addSubview:postScrollView];
+    
     if (postType == 0) {
-        [topTitleLabel setText:@"发新邮件"];
+        self.title = @"发新邮件";
         [postUser setText:@""];
         [postUser becomeFirstResponder];
         [sendButton setEnabled:NO];
@@ -44,10 +97,9 @@
         [postContent setText:@""];
         [postTitleCount setText:[NSString stringWithFormat:@"%i", [postTitle.text length]]];
         [sendButton setEnabled:NO];
-        
     }
     if (postType == 1) {
-        [topTitleLabel setText:@"回复邮件"];
+        self.title = @"回复邮件";
         [postUser setText:rootMail.author];
         [postUser setEnabled:NO];
         [addUserButton setHidden:YES];
@@ -55,39 +107,49 @@
         if ([rootMail.title length] >=4 && [[rootMail.title substringToIndex:4] isEqualToString:@"Re: "]) {
             [postTitle setText:[NSString stringWithFormat:@"%@", rootMail.title]];
         }
-        else
-        {
+        else {
             [postTitle setText:[NSString stringWithFormat:@"Re: %@", rootMail.title]];
         }
-
+        
         [postContent setText:@""];
         [postContent becomeFirstResponder];
         [postTitleCount setText:[NSString stringWithFormat:@"%i", [postTitle.text length]]];
     }
     if (postType == 2) {
-        [topTitleLabel setText:@"发新邮件"];
+        self.title = @"发新邮件";
         [postUser setText:sentToUser];
         [postUser setEnabled:NO];
         [addUserButton setHidden:YES];
-        [postUser becomeFirstResponder];
+        [postTitle becomeFirstResponder];
         [postTitle setText:@""];
         [postContent setText:@""];
         [postTitle becomeFirstResponder];
         [postTitleCount setText:[NSString stringWithFormat:@"%i", [postTitle.text length]]];
         [sendButton setEnabled:NO];
     }
-
-    // Do any additional setup after loading the view from its nib.
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+    
+    float version = [[[UIDevice currentDevice] systemVersion] floatValue];
+    if (version >= 5.0) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillChangeFrameNotification object:nil];
+    }
+    
+    UIPanGestureRecognizer* recognizer;
+    recognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(scrollViewWillBeginDragging:)];
+    [self.view addGestureRecognizer:recognizer];
 }
--(IBAction)inputText:(id)sender
+
+-(IBAction)inputTitle:(id)sender
 {
     [postTitleCount setText:[NSString stringWithFormat:@"%i",[postTitle.text length]]];
     int count = [postUser.text length];
     if (count == 0) {
-        [sendButton setEnabled:NO];
+        [self.navigationItem.rightBarButtonItem setEnabled:NO];
     }
     else {
-        [sendButton setEnabled:YES];
+        [self.navigationItem.rightBarButtonItem setEnabled:YES];
     }
 }
 
@@ -99,13 +161,12 @@
     // e.g. self.myOutlet = nil;
 }
 
--(IBAction)cancel:(id)sender
+-(void)cancel
 {
-    [mDelegate dismissPostMailView];
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
-
--(IBAction)sent:(id)sender
+-(void)send
 {
     [postUser resignFirstResponder];
     [postTitle resignFirstResponder];
@@ -120,17 +181,31 @@
 
 -(void)firstTimeLoad
 {
+    [HUD removeFromSuperview];
     if([self didPost])
     {
-        [mDelegate dismissPostMailView];
+        [self performSelectorOnMainThread:@selector(sendSuccess) withObject:nil waitUntilDone:NO];
     }
     else {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"发送失败" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
+        [self performSelectorOnMainThread:@selector(sendFailed) withObject:nil waitUntilDone:NO];
     }
-    [HUD removeFromSuperview];
 }
 
+-(void)sendSuccess
+{
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+-(void)sendFailed
+{
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    hud.mode = MBProgressHUDModeText;
+    hud.labelText = @"发送失败";
+    hud.margin = 30.f;
+    hud.yOffset = 0.f;
+    hud.removeFromSuperViewOnHide = YES;
+    [hud hide:YES afterDelay:0.8];
+}
 
 -(BOOL)didPost
 {
@@ -149,9 +224,10 @@
 
 -(IBAction)addUser:(id)sender
 {
-    AddPostUserViewController * addPostUserViewController = [[AddPostUserViewController alloc] initWithNibName:@"AddPostUserViewController" bundle:nil];
+    AddPostUserViewController * addPostUserViewController = [[AddPostUserViewController alloc] init];
     addPostUserViewController.mDelegate = self;
-    [self presentModalViewController:addPostUserViewController animated:YES];
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:addPostUserViewController];
+    [self presentViewController:nav animated:YES completion:nil];
 }
 -(void)didAddUser:(NSString *)userID
 {
@@ -161,18 +237,65 @@
 
 -(void)dismissAddUserView
 {
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    [postUser resignFirstResponder];
+    [postTitle resignFirstResponder];
+    [postContent resignFirstResponder];
+}
+
+#pragma mark -
+#pragma mark Responding to keyboard events
+- (void)keyboardWillShow:(NSNotification *)notification {
+    /*
+     Reduce the size of the text view so that it's not obscured by the keyboard.
+     Animate the resize so that it's in sync with the appearance of the keyboard.
+     */
+    NSDictionary *userInfo = [notification userInfo];
+    // Get the origin of the keyboard when it's displayed.
+    NSValue* aValue = [userInfo objectForKey:UIKeyboardFrameEndUserInfoKey];
+    // Get the top of the keyboard as the y coordinate of its origin in self's view's coordinate system. The bottom of the text view's frame should align with the top of the keyboard's final position.
+    CGRect keyboardRect = [aValue CGRectValue];
+    // Get the duration of the animation.
+    NSValue *animationDurationValue = [userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSTimeInterval animationDuration;
+    [animationDurationValue getValue:&animationDuration];
+    // Animate the resize of the text view's frame in sync with the keyboard's appearance.
+    
+    [postScrollView setContentOffset:CGPointMake(0, 0)];
+    [postContent setFrame:CGRectMake(5, 55, self.view.frame.size.width - 10, self.view.frame.size.height - 64 - 55 - keyboardRect.size.height - 2)];
+}
+- (void)keyboardWillHide:(NSNotification *)notification {
+    NSDictionary* userInfo = [notification userInfo];
+    /*
+     Restore the size of the text view (fill self's view).
+     Animate the resize so that it's in sync with the disappearance of the keyboard.
+     */
+    NSValue *animationDurationValue = [userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+    NSTimeInterval animationDuration;
+    [animationDurationValue getValue:&animationDuration];
+    if (postContent.contentSize.height < self.view.frame.size.height - 64 - 55) {
+        [postContent setFrame:CGRectMake(5, 55, self.view.frame.size.width - 10, self.view.frame.size.height - 64 - 55)];
+    }
+    else
+    {
+        [postContent setFrame:CGRectMake(5, 55, self.view.frame.size.width - 10, postContent.contentSize.height)];
+        [postScrollView setContentSize:CGSizeMake(postScrollView.contentSize.width, postContent.contentSize.height + 55)];
+    }
 }
 
 #pragma mark - Rotation
 -(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
-    return (toInterfaceOrientation == UIInterfaceOrientationPortrait);
+    return YES;
 }
 - (BOOL)shouldAutorotate{
-    return NO;
+    return YES;
 }
 -(NSUInteger)supportedInterfaceOrientations{
-    return UIInterfaceOrientationMaskPortrait;
+    return UIInterfaceOrientationMaskAllButUpsideDown;
 }
 
 @end

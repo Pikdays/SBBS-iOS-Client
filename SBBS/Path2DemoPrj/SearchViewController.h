@@ -17,10 +17,17 @@
 {
     NSString * searchString;
     
-    IBOutlet SearchBoardViewController * searchBoardViewController;
-    IBOutlet SearchTopicViewController * searchTopicViewController;
-    IBOutlet SearchUserViewController * searchUserViewController;
+    SearchBoardViewController * searchBoardViewController;
+    SearchTopicViewController * searchTopicViewController;
+    SearchUserViewController * searchUserViewController;
+    
+    UISegmentedControl * seg;
 }
+@property(nonatomic, strong)SearchBoardViewController * searchBoardViewController;
+@property(nonatomic, strong)SearchTopicViewController * searchTopicViewController;
+@property(nonatomic, strong)SearchUserViewController * searchUserViewController;
 @property(nonatomic, strong)NSString * searchString;
+@property(nonatomic, strong)UISegmentedControl * seg;
+
 -(void)refreshSearching;
 @end

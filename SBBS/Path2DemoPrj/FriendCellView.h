@@ -11,14 +11,11 @@
 
 @interface FriendCellView : UITableViewCell
 {
+    IBOutlet UIView * backView;
     IBOutlet UILabel * IDandName;
     IBOutlet UILabel * mode;
-    
+    IBOutlet UILabel * IDandNameView;
     User * user;
 }
 @property(nonatomic, strong)User * user;
-
-
--(void)setReadyToShow;
--(void)showAinmationWhenSeleceted;
 @end

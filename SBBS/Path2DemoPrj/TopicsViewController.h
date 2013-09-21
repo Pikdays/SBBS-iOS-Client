@@ -9,37 +9,32 @@
 #import <UIKit/UIKit.h>
 #import "HomeViewController.h"
 #import "CustomTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
 #import "TopTenTableViewCell.h"
 #import "SingleTopicViewController.h"
-
 #import "DataModel.h"
 #import "WBUtil.h"
 #import "BBSAPI.h"
 
-@interface TopicsViewController : UIViewController<TimeScrollerDelegate, MBProgressHUDDelegate, QuadCurveMenuDelegate>
+@interface TopicsViewController : UIViewController<MBProgressHUDDelegate>
 {
     NSString * boardName;
     NSMutableArray * topTenArray;
     CustomTableView * customTableView;
-    TimeScroller *_timeScroller;
-    MBProgressHUD * HUD;
-    QuadCurveMenu *menu;
     NSArray *modeContent;
     UIPickerView *modePicker;
     IBOutlet UILabel * topTitle;
-    IBOutlet UISegmentedControl * readModeSeg;
+    UISegmentedControl * readModeSeg;
+    UIToolbar * readModeSegToolBar;
     BOOL readModeSegIsShowing;
-    
+    FPActivityView* activityView;
     int curMode;// 0 全部帖子（默认） 1 主题贴 2 论坛模式 3 置顶帖 4 文摘区 5 保留区
     MyBBS * myBBS;
 }
-@property(nonatomic, strong)NSString * boardName;
+@property(nonatomic, retain)NSString * boardName;
 @property(nonatomic, strong)NSArray * topTenArray;
-@property(nonatomic)CustomTableView * customTableView;
+@property(nonatomic, strong)CustomTableView * customTableView;
+@property(nonatomic, strong)UISegmentedControl * readModeSeg;
 
--(IBAction)back:(id)sender;
--(IBAction)changeCurMode:(id)sender;
+-(void)changeReadMode;
 -(IBAction)readModeSegChanged:(id)sender;
 @end

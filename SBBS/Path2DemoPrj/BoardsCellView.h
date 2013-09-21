@@ -26,7 +26,4 @@
 @property(nonatomic, strong)NSString * description;
 @property(nonatomic, assign)int section;
 @property(nonatomic, assign)BOOL leaf;
-
--(void)setReadyToShow;
--(void)showAinmationWhenSeleceted;
 @end

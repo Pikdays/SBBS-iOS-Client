@@ -9,27 +9,23 @@
 #import <UIKit/UIKit.h>
 #import "HomeViewController.h"
 #import "AppDelegate.h"
-#import "CustomTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
+#import "CustomNoFooterTableView.h"
 #import "BoardsCellView.h"
 #import "TopicsViewController.h"
-
 #import "DataModel.h"
 #import "WBUtil.h"
 #import "BBSAPI.h"
 #import "MyBBS.h"
 
 
-@interface AllFavViewController : UIViewController<TimeScrollerDelegate, MBProgressHUDDelegate, UITableViewDataSource, UITableViewDelegate>
+@interface AllFavViewController : UIViewController<MBProgressHUDDelegate, UITableViewDataSource, UITableViewDelegate>
 {
     NSArray * topTenArray;
     CustomNoFooterTableView * customTableView;
     UITableView * normalTableView;
-    MBProgressHUD * HUD;
+    FPActivityView* activityView;
     
     NSString * topTitleString;
-    
     MyBBS * myBBS;
 }
 @property(nonatomic, strong)NSArray * topTenArray;

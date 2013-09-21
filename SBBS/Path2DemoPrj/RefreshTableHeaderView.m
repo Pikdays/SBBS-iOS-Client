@@ -18,42 +18,37 @@
 - (id)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
 		self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-		//self.backgroundColor = [UIColor colorWithRed:226.0/255.0 green:231.0/255.0 blue:237.0/255.0 alpha:1.0];
-        self.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
+        self.backgroundColor = [UIColor whiteColor];
         
-		UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, frame.size.height - 30.0f, self.frame.size.width, 20.0f)];
-        
-        UIImageView * logoImageView = [[UIImageView alloc] initWithFrame:CGRectMake(135, frame.size.height - 110.0f, 50, 50)];
-        [logoImageView setImage:[UIImage imageNamed:@"headerlogo.png"]];
+        UIImageView * logoImageView = [[UIImageView alloc] initWithFrame:CGRectMake(frame.size.width/2 - 25, frame.size.height - 75.0f, 50, 50)];
+        [logoImageView setImage:[UIImage imageNamed:@"icon@2x.png"]];
         logoImageView.alpha = 0.5;
         [self addSubview:logoImageView];
+        
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, frame.size.height - 20.0f, self.frame.size.width, 20.0f)];
+        /*
 		label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 		label.font = [UIFont systemFontOfSize:12.0f];
 		label.textColor = TEXT_COLOR;
-		//label.shadowColor = [UIColor colorWithWhite:0.9f alpha:1.0f];
-		//label.shadowOffset = CGSizeMake(0.0f, 1.0f);
 		label.backgroundColor = [UIColor clearColor];
-		label.textAlignment = UITextAlignmentCenter;
+		label.textAlignment = NSTextAlignmentCenter;
 		[self addSubview:label];
 		_lastUpdatedLabel=label;
+         */
          
-         
-		
-		label = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, frame.size.height - 55.0f, self.frame.size.width, 20.0f)];
+        //UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, frame.size.height - 55.0f, self.frame.size.width, 20.0f)];
 		label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 		label.font = [UIFont boldSystemFontOfSize:13.0f];
 		label.textColor = TEXT_COLOR;
-		//label.shadowColor = [UIColor colorWithWhite:0.9f alpha:1.0f];
-		//label.shadowOffset = CGSizeMake(0.0f, 1.0f);
 		label.backgroundColor = [UIColor clearColor];
-		label.textAlignment = UITextAlignmentCenter;
+		label.textAlignment = NSTextAlignmentCenter;
 		[self addSubview:label];
 		_statusLabel=label;
 		
 		CALayer *layer = [CALayer layer];
 		layer.frame = CGRectMake(25.0f, frame.size.height - 65.0f, 30.0f, 55.0f);
 		layer.contentsGravity = kCAGravityResizeAspect;
-		layer.contents = (id)[UIImage imageNamed:@"blueArrowForHeader.png"].CGImage;
+		layer.contents = (id)[UIImage imageNamed:@"blueArrowForHeader@2x.png"].CGImage;
         
          #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 40000
          if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {

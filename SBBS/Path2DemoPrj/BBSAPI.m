@@ -7,15 +7,15 @@
 //
 
 #import "BBSAPI.h"
+#import "Reachability.h"
 
 @implementation BBSAPI
 
 +(NSArray *)searchTopics:(NSString *)key start:(NSString *)start Token:(NSString*)token
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
@@ -28,8 +28,10 @@
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
     
-    
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     NSArray * Status = [JsonParseEngine parseSearchTopics:topTenTopics];
     if (Status == nil) {
         return nil;
@@ -41,13 +43,12 @@
 
 +(NSArray *)searchBoards:(NSString *)key Token:(NSString*)token
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
-    
+     
     NSMutableString * baseurl = [@"http://bbs.seu.edu.cn/api/search/boards.json?" mutableCopy];
     [baseurl appendFormat:@"name=%@", [key URLEncodedString]];
     if (token != nil) {
@@ -55,7 +56,10 @@
     }
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     NSArray * Status = [JsonParseEngine parseBoards:topTenTopics];
@@ -70,10 +74,9 @@
 
 +(User *)login:(NSString *)user Pass:(NSString *)pass
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
@@ -82,7 +85,10 @@
     [baseurl appendFormat:@"&pass=%@",pass];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     User * Status = [JsonParseEngine parseLogin:topTenTopics];
@@ -94,20 +100,43 @@
     }
 }
 
++(BOOL)addNotificationToken:(NSString *)token iToken:(NSString *)iToken
+{
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
+    {
+        return false;
+    }
+    
+    NSMutableString * baseurl = [@"http://bbs.seu.edu.cn/api/push/add.json?" mutableCopy];
+    [baseurl appendFormat:@"token=%@",token];
+    [baseurl appendFormat:@"&iToken=%@",iToken];
+    
+    NSURL *url = [NSURL URLWithString:baseurl];
+    NSData * feedback = [NSData dataWithContentsOfURL:url];
+    if (feedback == nil) {
+        return NO;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
+    BOOL success = [[topTenTopics objectForKey:@"success"] boolValue];
+    return success;
+}
 
 +(NSArray *)topTen
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
     NSString *baseurl= @"http://bbs.seu.edu.cn/api/hot/topten.json";
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     NSArray * Status = [JsonParseEngine parseTopics:topTenTopics];
     if (Status == nil) {
@@ -120,19 +149,23 @@
 
 +(NSArray *)sectionTopTen:(int)sectionNumber
 {
-    if(![BBSAPI isNetworkReachable])
+    /*
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
+    */
     
     NSMutableString *baseurl= [@"http://bbs.seu.edu.cn/api/hot/section.json?" mutableCopy];
     [baseurl appendFormat:@"section=%i", sectionNumber];
     
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     NSArray * Status = [JsonParseEngine parseTopics:topTenTopics];
     if (Status == nil) {
@@ -145,19 +178,21 @@
 
 +(NSArray *)hotBoards
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
     NSString *baseurl= @"http://bbs.seu.edu.cn/api/hot/boards.json";
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *hotBoards = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
-    NSArray * Status = [JsonParseEngine parseBoards:topTenTopics];
+    NSArray * Status = [JsonParseEngine parseBoards:hotBoards];
     if (Status == nil) {
         return nil;
     }
@@ -168,7 +203,7 @@
 
 +(NSArray *)offlineDataToAllSections:(NSData *)data
 {
-    NSDictionary *topTenTopics = [data objectFromJSONData];
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil];
     NSArray * Status = [JsonParseEngine parseSections:topTenTopics];
     if (Status == nil) {
         return nil;
@@ -180,10 +215,9 @@
 
 +(NSData *)allSectionsData:(NSString*)token;
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
@@ -198,10 +232,9 @@
 
 +(NSArray *)allFavSections:(NSString *)token
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
@@ -209,7 +242,10 @@
     [baseurl appendFormat:@"token=%@", token];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     NSArray * Status = [JsonParseEngine parseSections:topTenTopics];
@@ -223,10 +259,9 @@
 
 +(NSArray *)onlineFriends:(NSString *)token
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
@@ -234,9 +269,11 @@
     [baseurl appendFormat:@"token=%@", token];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
-    
-    
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
+
     NSArray * Status = [JsonParseEngine parseFriends:topTenTopics];
     if (Status == nil) {
         return nil;
@@ -248,10 +285,9 @@
 
 +(NSArray *)allFriends:(NSString *)token
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
@@ -259,7 +295,10 @@
     [baseurl appendFormat:@"token=%@", token];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     NSLog(@"%@",[[NSString alloc] initWithData:feedback encoding:NSUTF8StringEncoding]);
     NSArray * Status = [JsonParseEngine parseFriends:topTenTopics];
@@ -273,10 +312,9 @@
 
 +(BOOL)deletFriend:(NSString *)token ID:(NSString *)ID
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return false;
     }
     
@@ -285,7 +323,10 @@
     [baseurl appendFormat:@"&id=%@",ID];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return NO;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     BOOL success = [[topTenTopics objectForKey:@"success"] boolValue];
@@ -293,10 +334,9 @@
 }
 +(BOOL)addFriend:(NSString *)token ID:(NSString *)ID
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return false;
     }
     
@@ -305,7 +345,10 @@
     [baseurl appendFormat:@"&id=%@",ID];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return NO;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     int result = [[topTenTopics objectForKey:@"result"] intValue];
@@ -317,10 +360,9 @@
 }
 +(BOOL)addFavBoard:(NSString *)token BoardName:(NSString *)BoardName
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return false;
     }
     
@@ -329,7 +371,10 @@
     [baseurl appendFormat:@"&bname=%@",BoardName];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return NO;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     if ([topTenTopics objectForKey:@"result"] == [NSNull null]) {
         return YES;
@@ -344,10 +389,9 @@
 }
 +(BOOL)addFavDirect:(NSString *)token DirectName:(NSString *)DirectName
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return false;
     }
     
@@ -356,7 +400,10 @@
     [baseurl appendFormat:@"&dname=%@",DirectName];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return NO;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     int result = [[topTenTopics objectForKey:@"result"] intValue];
     BOOL success = NO;
@@ -368,10 +415,9 @@
 
 +(BOOL)isFriend:(NSString *)token ID:(NSString *)ID
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return false;
     }
     
@@ -380,7 +426,10 @@
     [baseurl appendFormat:@"&id=%@",ID];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return FALSE;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     int result = [[topTenTopics objectForKey:@"result"] intValue];
@@ -395,10 +444,9 @@
 }
 +(NSArray *)getMails:(NSString *)token Type:(int)type Start:(int)start
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
@@ -408,7 +456,10 @@
     [baseurl appendFormat:@"&limit=30&start=%i",start];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     NSArray * Status = [JsonParseEngine parseMails:topTenTopics Type:type];
@@ -422,10 +473,9 @@
 
 +(Mail *)getSingleMail:(NSString *)token Type:(int)type ID:(int)ID
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
@@ -435,7 +485,10 @@
     [baseurl appendFormat:@"&id=%i",ID];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     Mail * Status = [JsonParseEngine parseSingleMail:topTenTopics Type:type];
@@ -448,10 +501,9 @@
 }
 +(BOOL)deleteSingleMail:(NSString *)token Type:(int)type ID:(int)ID
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return false;
     }
     
@@ -461,18 +513,18 @@
     [baseurl appendFormat:@"&id=%i",ID];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    
-    
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return NO;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     BOOL success = [[topTenTopics objectForKey:@"success"] boolValue];
     return success;
 }
 +(BOOL)postMail:(NSString *)token User:(NSString *)user Title:(NSString *)title Content:(NSString *)content Reid:(int)reid
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return false;
     }
     
@@ -484,9 +536,10 @@
     [baseurl appendFormat:@"&reid=%i",reid];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    
-    
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return NO;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     BOOL success = [[topTenTopics objectForKey:@"success"] boolValue];
     if (success) {
         int result = [[topTenTopics objectForKey:@"result"] intValue];
@@ -503,20 +556,14 @@
 
 +(Notification *)getNotification:(NSString *)token
 {
-    /*
-    if(![BBSAPI isNetworkReachable])
-    {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
-        return nil;
-    }
-     */
-    
     NSMutableString * baseurl = [@"http://bbs.seu.edu.cn/api/notifications.json?" mutableCopy];
     [baseurl appendFormat:@"token=%@",token];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     Notification * Status = [JsonParseEngine parseNotification:topTenTopics];
@@ -533,19 +580,20 @@
     [baseurl appendFormat:@"token=%@",token];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
+    if (feedback == nil) {
+        return NO;
+    }
     
-    
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     BOOL success = [[topTenTopics objectForKey:@"success"] boolValue];
     return success;
 }
 
 +(NSArray *)boardTopics:(NSString *)board Start:(int)start Token:(NSString*)token Mode:(int)mode
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
@@ -557,7 +605,10 @@
     }
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     NSArray * Status = [JsonParseEngine parseTopics:topTenTopics];
@@ -571,24 +622,26 @@
 
 +(NSArray *)singleTopic:(NSString *)board ID:(int)ID Start:(int)start Token:(NSString*)token
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
-    NSMutableString * baseurl = [@"http://bbs.seu.edu.cn/api/topic/" mutableCopy];
+    NSMutableString * baseurl = [@"http://bbs.seu.edu.cn/api/topic" mutableCopy];
     [baseurl appendFormat:@"/%@",board];
     [baseurl appendFormat:@"/%i.json?start=%i&limit=30",ID,start];
     if (token != nil) {
         [baseurl appendFormat:@"&token=%@", token];
     }
+    NSLog(@"%@", baseurl);
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    
 
-    NSDictionary *singleTopic = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *singleTopic = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     NSArray * Status = [JsonParseEngine parseSingleTopic:singleTopic];
     if (Status == nil) {
         return nil;
@@ -599,10 +652,9 @@
 }
 +(User *)userInfo:(NSString *)userID
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     
@@ -610,9 +662,10 @@
     [baseurl appendFormat:@"%@.json",userID];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    
-    
-    NSDictionary *singleTopic = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *singleTopic = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     User * Status = [JsonParseEngine parseUserInfo:singleTopic];
     if (Status == nil) {
         return nil;
@@ -627,10 +680,9 @@
 
 +(BOOL)editTopic:(NSString *)token Board:(NSString *)board Title:(NSString *)title Content:(NSString *)content Reid:(int)reid
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return false;
     }
     
@@ -643,7 +695,10 @@
     [baseurl appendFormat:@"&type=%i",3];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return NO;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     
     BOOL success = [[topTenTopics objectForKey:@"success"] boolValue];
@@ -652,10 +707,9 @@
 
 +(BOOL)postTopic:(NSString *)token Board:(NSString *)board Title:(NSString *)title Content:(NSString *)content Reid:(int)reid
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return false;
     }
     
@@ -668,35 +722,14 @@
     [baseurl appendFormat:@"&type=%i",3];
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *topTenTopics = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return NO;
+    }
+    NSDictionary *topTenTopics = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     
     NSLog(@"%@",[[NSString alloc] initWithData:feedback encoding:NSUTF8StringEncoding]);
     BOOL success = [[topTenTopics objectForKey:@"success"] boolValue];
     return success;
-}
-
-
-+(BOOL)isNetworkReachable{
-    // Create zero addy
-    struct sockaddr_in zeroAddress;
-    bzero(&zeroAddress, sizeof(zeroAddress));
-    zeroAddress.sin_len = sizeof(zeroAddress);
-    zeroAddress.sin_family = AF_INET;
-    
-    // Recover reachability flags
-    SCNetworkReachabilityRef defaultRouteReachability = SCNetworkReachabilityCreateWithAddress(NULL, (struct sockaddr *)&zeroAddress);
-    SCNetworkReachabilityFlags flags;
-    
-    BOOL didRetrieveFlags = SCNetworkReachabilityGetFlags(defaultRouteReachability, &flags);
-    CFRelease(defaultRouteReachability);
-    
-    if (!didRetrieveFlags)
-    {
-        return NO;
-    }
-    BOOL isReachable = flags & kSCNetworkFlagsReachable;
-    BOOL needsConnection = flags & kSCNetworkFlagsConnectionRequired;
-    return (isReachable && !needsConnection) ? YES : NO;
 }
 
 //+(NSArray *)postImageto:(NSURL *)url withImage:(UIImage *)img andToken:(NSString *)token
@@ -755,11 +788,9 @@
 
 +(NSArray* )postImg:(NSString *)string Image:(UIImage *)image toUrl:(NSURL *)url
 {
- 
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     NSString *kStringBoundary=@"0xKhTmLbOuNdArY";
@@ -827,7 +858,7 @@
     [request setHTTPBody:body];
     NSData* returnData =  [NSURLConnection sendSynchronousRequest:request
                                               returningResponse:nil error:nil];
-    NSDictionary *attDic = [returnData objectFromJSONData];
+    NSDictionary *attDic = [NSJSONSerialization JSONObjectWithData:returnData options:kNilOptions error:nil];
     NSArray * attArray=[JsonParseEngine parseAttachments:attDic];
     
     if (attArray!=nil) {
@@ -847,14 +878,16 @@
 
 +(NSArray*)delImg:(NSURL *)url
 {
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *attDic = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *attDic = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     NSArray *attArray=[JsonParseEngine parseAttachments:attDic];
     if (attArray!=nil) {
         return attArray;
@@ -867,10 +900,9 @@
 
 +(NSArray *)getAttachmentsFromTopic:(int)topicId andBoard:(NSString *)boardId token:(NSString *)token
 {//topicId<=-1 means new post!!!
-    if(![BBSAPI isNetworkReachable])
+    BBSAPI * bbsapi = [[BBSAPI alloc] init];
+    if(![bbsapi isNetworkReachable])
     {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
-        [alert show];
         return nil;
     }
     NSMutableString * baseurl = [@"http://bbs.seu.edu.cn/api/" mutableCopy];
@@ -888,7 +920,10 @@
     }
     NSURL *url = [NSURL URLWithString:baseurl];
     NSData * feedback = [NSData dataWithContentsOfURL:url];
-    NSDictionary *attDic = [feedback objectFromJSONData];
+    if (feedback == nil) {
+        return nil;
+    }
+    NSDictionary *attDic = [NSJSONSerialization JSONObjectWithData:feedback options:kNilOptions error:nil];
     NSArray *attArray=[JsonParseEngine parseAttachments:attDic];
     if (attArray!=nil) {
         return attArray;
@@ -899,4 +934,91 @@
     }
 }
 
+-(BOOL)isNetworkReachable{
+    // Create zero addy
+    struct sockaddr_in zeroAddress;
+    bzero(&zeroAddress, sizeof(zeroAddress));
+    zeroAddress.sin_len = sizeof(zeroAddress);
+    zeroAddress.sin_family = AF_INET;
+    
+    // Recover reachability flags
+    SCNetworkReachabilityRef defaultRouteReachability = SCNetworkReachabilityCreateWithAddress(NULL, (struct sockaddr *)&zeroAddress);
+    SCNetworkReachabilityFlags flags;
+    
+    BOOL didRetrieveFlags = SCNetworkReachabilityGetFlags(defaultRouteReachability, &flags);
+    CFRelease(defaultRouteReachability);
+    
+    if (!didRetrieveFlags)
+    {
+        return NO;
+    }
+    BOOL isReachable = flags & kSCNetworkFlagsReachable;
+    BOOL needsConnection = flags & kSCNetworkFlagsConnectionRequired;
+    
+    if (!(isReachable && !needsConnection)) {
+        [self performSelectorOnMainThread:@selector(networkIsUnreachable) withObject:nil waitUntilDone:NO];
+    }
+    
+    return (isReachable && !needsConnection) ? YES : NO;
+}
+
+-(void)networkIsUnreachable{
+    UIAlertView * alert = [[UIAlertView alloc] initWithTitle:nil message:@"请检查网络连接" delegate:nil cancelButtonTitle:@"好" otherButtonTitles:nil, nil];
+    [alert show];
+}
+
+
++ (NSString *)dateToString:(NSDate *)date;
+{
+    NSMutableString * dateString = [[NSMutableString alloc] init];
+    
+    
+    NSDate *today = [NSDate date];
+    NSCalendar *calendar = [NSCalendar currentCalendar];
+    
+    NSDateComponents *dateComponents;
+    dateComponents = [calendar components:NSYearCalendarUnit | NSMonthCalendarUnit | NSWeekOfYearCalendarUnit | NSWeekCalendarUnit | NSWeekdayCalendarUnit | NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit fromDate:date];
+    
+    NSDateComponents *todayComponents = [calendar components:NSYearCalendarUnit | NSMonthCalendarUnit | NSWeekOfYearCalendarUnit | NSWeekCalendarUnit | NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit fromDate:today];
+    
+    if (dateComponents.year == todayComponents.year && dateComponents.month == todayComponents.month && dateComponents.day == todayComponents.day) {
+        
+        [dateString  appendString:@""];
+        
+    } else if ((dateComponents.year == todayComponents.year) && (dateComponents.month == todayComponents.month) && (dateComponents.day == todayComponents.day - 1)) {
+        
+        [dateString  appendString:@"昨天"];
+        
+    } else if ((dateComponents.year == todayComponents.year) && (dateComponents.weekOfYear == todayComponents.weekOfYear)) {
+        
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        dateFormatter.dateFormat = @"cccc";
+        NSArray * array = [NSArray arrayWithObjects:@"开始", @"天", @"一", @"二", @"三", @"四", @"五", @"六", nil];
+        [dateString  appendString:[NSString stringWithFormat:@"星期%@", [array objectAtIndex:dateComponents.weekday]]];
+        
+    } else if (dateComponents.year == todayComponents.year) {
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        dateFormatter.dateFormat = @"M-d";
+        if ([dateFormatter stringFromDate:date] != nil) {
+            [dateString  appendString:[NSString stringWithFormat:@"%@", [dateFormatter stringFromDate:date]]];
+        }
+    } else {
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        dateFormatter.dateFormat = @"yyyy-M-d";
+        NSLog(@"%@", [dateFormatter stringFromDate:date]);
+        if ([dateFormatter stringFromDate:date] != nil) {
+            [dateString  appendString:[NSString stringWithFormat:@"%@", [dateFormatter stringFromDate:date]]];
+        }
+    }
+    
+    [dateString  appendString:@"  "];
+    
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"h:mm a"];
+    if ([dateFormatter stringFromDate:date] != nil) {
+        [dateString  appendString:[NSString stringWithFormat:@"%@", [dateFormatter stringFromDate:date]]];
+    }
+    
+    return dateString;
+}
 @end

@@ -23,12 +23,17 @@
     MBProgressHUD * HUD;
     
     NSArray * showNotificationArray;
-    IBOutlet UISegmentedControl * seg;
-    IBOutlet UIImageView * commentNotificationImageView;
-    IBOutlet UIImageView * atNotificationImageView;
-    IBOutlet UIImageView * mailNotificationImageView;
+    UISegmentedControl * seg;
+    UIImageView * commentNotificationImageView;
+    UIImageView * atNotificationImageView;
+    UIImageView * mailNotificationImageView;
 }
 @property(nonatomic, strong)NSArray * showNotificationArray;
--(IBAction)back:(id)sender;
+@property(nonatomic, strong)UISegmentedControl * seg;
+@property(nonatomic, strong)UIImageView * commentNotificationImageView;
+@property(nonatomic, strong)UIImageView * atNotificationImageView;
+@property(nonatomic, strong)UIImageView * mailNotificationImageView;
+
+
 -(IBAction)clearAll:(id)sender;
 @end

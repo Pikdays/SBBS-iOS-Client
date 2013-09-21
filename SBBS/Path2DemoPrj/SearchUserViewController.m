@@ -11,9 +11,9 @@
 @synthesize searchString;
 @synthesize searchedUser;
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id)init
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super init];
     if (self) {
 
     }
@@ -24,11 +24,13 @@
 {
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
-    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height-108)];
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
+    //[self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height-108)];
+    self.view.backgroundColor = [UIColor whiteColor];
+    
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     myBBS = appDelegate.myBBS;
-    customTableView = [[CustomNoFooterTableView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height) Delegate:self];
+    
+    customTableView = [[CustomNoFooterTableView alloc] initWithFrame:CGRectMake(0, 0, rect.size.width, rect.size.height - 108) Delegate:self];
     [self.view addSubview:customTableView];
     [customTableView reloadData];
 }
@@ -66,23 +68,13 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
-    NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
-    BOOL * isLoadAvatar = [defaults boolForKey:@"isLoadAvatar"];
     UserInfoViewController * userInfoViewController;
-    if (isLoadAvatar) {
-        userInfoViewController = [[UserInfoViewController alloc] initWithNibName:@"UserInfoViewController" bundle:nil];
-    }
-    else {
-        userInfoViewController = [[UserInfoViewController alloc] initWithNibName:@"UserInfoViewController_noAvatar" bundle:nil];
-    }
-
+    userInfoViewController = [[UserInfoViewController alloc] initWithNibName:@"UserInfoViewController" bundle:nil];
     userInfoViewController.userString = self.searchedUser.ID;
+    
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    HomeViewController * home = appDelegate.homeViewController;
-    [home restoreViewLocation];
-    [home removeOldViewController];
-    home.realViewController = userInfoViewController;
-    [home showViewController:searchedUser.ID];
+    
+    [appDelegate.leftnavController presentPopupViewController:userInfoViewController animationType:MJPopupViewAnimationSlideTopBottom];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -90,11 +82,10 @@
     if (cell == nil) {
         NSArray * array = [[NSBundle mainBundle] loadNibNamed:@"FriendCellView" owner:self options:nil];
         cell = [array objectAtIndex:0];
-        [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
     }
+    [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
     
     cell.user = searchedUser;
-    [cell setReadyToShow];
 	return cell;
 }
 
@@ -103,34 +94,18 @@
     return 44;
 }
 
-- (void)scrollViewDidScroll{
-    
-}
-
-- (void)scrollViewDidEndDecelerating{
-    
-}
-
-- (void)scrollViewWillBeginDragging{
-    
-}
-
-- (void)scrollViewDidEndDragging:(BOOL)decelerate{
-    
-}
-
 -(void)firstTimeLoad
 {
     self.searchedUser = [BBSAPI userInfo:searchString];
     if (self.searchedUser != nil) {
         [customTableView reloadData];
     }
-    [HUD removeFromSuperview];
+    [activityView removeFromSuperview];
+    activityView = nil;
     
     [UIView beginAnimations:nil context:nil];
 	[UIView setAnimationDuration:0.3];
 	[UIView setAnimationDelegate:self];
-	[UIView setAnimationDidStopSelector:@selector(bounce2AnimationStopped)];
     [customTableView setAlpha:1];
 	[UIView commitAnimations];
 }
@@ -139,10 +114,9 @@
 {
     [customTableView setAlpha:0];
     
-    HUD = [[MBProgressHUD alloc] initWithView:self.view];
-    [self.view addSubview:HUD];
-    HUD.labelText = @"载入中...";
-    [HUD showWhileExecuting:@selector(firstTimeLoad) onTarget:self withObject:nil animated:YES];
+    [activityView start];
+    [self.view addSubview:activityView];
+    [self performSelectorInBackground:@selector(firstTimeLoad) withObject:nil];
 }
 
 #pragma -

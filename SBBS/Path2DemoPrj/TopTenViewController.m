@@ -12,9 +12,9 @@
 @synthesize topTenArray;
 @synthesize customTableView;
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id)init
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super init];
     if (self) {
         
     }
@@ -23,94 +23,107 @@
 
 -(void)firstTimeLoad
 {
-    self.topTenArray = [BBSAPI topTen];
-    customTableView = [[CustomNoFooterTableView alloc] initWithFrame:CGRectMake(0, 44, self.view.frame.size.width, self.view.frame.size.height-44) Delegate:self];
-    [self.view addSubview:customTableView];
-    _timeScroller = [[TimeScroller alloc] initWithDelegate:self];
+    NSMutableArray * allArray = [[NSMutableArray alloc] init];
+    NSArray *array;
+    array = [BBSAPI topTen];
+    if (array != nil) {
+        [allArray addObject:[BBSAPI topTen]];
+    }
+    
+    for (int i = 0; i < 12; i++) {
+        array = [BBSAPI sectionTopTen:i];
+        if (array != nil) {
+            [allArray addObject:array];
+        }
+    }
+    self.topTenArray = allArray;
     [customTableView reloadData];
-    [HUD removeFromSuperview];
-    HUD = nil;
-}
-
--(IBAction)back:(id)sender
-{
-    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    [appDelegate.homeViewController leftBarBtnTapped:nil];
+    
+    [activityView removeFromSuperview];
+    activityView = nil;
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
-    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
-    HUD = [[MBProgressHUD alloc] initWithView:self.view];
-	[self.view insertSubview:HUD atIndex:0];
-	HUD.labelText = @"载入中...";
-	[HUD showWhileExecuting:@selector(firstTimeLoad) onTarget:self withObject:nil animated:YES];
+    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height - 64)];
+    self.view.backgroundColor = [UIColor whiteColor];
+    self.title = @"热门帖子";
+
+    customTableView = [[CustomNoFooterViewSectionHeaderTableView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height) Delegate:self];
+    [self.view addSubview:customTableView];
     
-    UISwipeGestureRecognizer* recognizer;
-    recognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(back:)];
-    recognizer.direction = UISwipeGestureRecognizerDirectionRight;
-    [self.view addGestureRecognizer:recognizer];
+    activityView = [[FPActivityView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 1)];
+    [activityView start];
+    [self.view addSubview:activityView];
+    [self performSelectorInBackground:@selector(firstTimeLoad) withObject:nil];
 }
 
 - (void)viewDidUnload
 {
     [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
 }
--(void)dealloc
-{
-    _timeScroller = nil;
-}
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    return (interfaceOrientation == UIInterfaceOrientationPortrait);
-}
-
-#pragma mark UIScrollViewDelegateMethods
-//The TimeScroller needs to know what's happening with the UITableView (UIScrollView)
-- (void)scrollViewDidScroll{
-    [_timeScroller scrollViewDidScroll];
-}
-
-- (void)scrollViewDidEndDecelerating{
-    [_timeScroller scrollViewDidEndDecelerating];
-}
-
-- (void)scrollViewWillBeginDragging{
-    [_timeScroller scrollViewWillBeginDragging];
-}
-
-- (void)scrollViewDidEndDragging:(BOOL)decelerate{
-    if (!decelerate) {
-        [_timeScroller scrollViewDidEndDecelerating];
-    }
-}
-//You should return an NSDate related to the UITableViewCell given. This will be
-//the date displayed when the TimeScroller is above that cell.
-- (UITableView *)tableViewForTimeScroller:(TimeScroller *)timeScroller {
-    return customTableView.mTableView;
-}
-- (NSDate *)dateForCell:(UITableViewCell *)cell {
-    TopTenTableViewCell * topTenCell = (TopTenTableViewCell *)cell;
-    return topTenCell.time;
-}
-
-
 
 #pragma mark - 
 #pragma mark tableViewDelegate
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView* myView = [[UIView alloc] init];
+    myView.backgroundColor = [UIColor colorWithRed:0.95 green:0.95 blue:0.95 alpha:1];
+    
+    UIView* myViewDropLine = [[UIView alloc] initWithFrame:CGRectMake(0, 22.5, self.view.frame.size.width, 0.5)];
+    myViewDropLine.backgroundColor = [UIColor whiteColor];
+    [myView addSubview:myViewDropLine];
+    
+    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(15, 0, 200, 22)];
+    titleLabel.font = [UIFont boldSystemFontOfSize:12];
+    titleLabel.textColor = [UIColor colorWithRed:0 green:0.5 blue:1 alpha:1];
+    titleLabel.backgroundColor = [UIColor clearColor];
+    
+    NSArray *nameArray = [NSArray arrayWithObjects:@"今日十大", @"本站系统 十大", @"东南大学 十大", @"电脑技术 十大", @"学术科学 十大", @"艺术文化 十大", @"乡情校谊 十大", @"休闲娱乐 十大", @"知性感性 十大", @"人文信息 十大", @"体坛风暴 十大", @"校务信箱 十大", @"社团群体 十大", nil];
+    
+    titleLabel.text = [nameArray objectAtIndex:section];
+    [myView addSubview:titleLabel];
+    return myView;
+}
+
+/*
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
+    NSArray *nameArray = [NSArray arrayWithObjects:@"今日十大", @"本站系统 十大", @"东南大学 十大", @"电脑技术 十大", @"学术科学 十大", @"艺术文化 十大", @"乡情校谊 十大", @"休闲娱乐 十大", @"知性感性 十大", @"人文信息 十大", @"体坛风暴 十大", @"校务信箱 十大", @"社团群体 十大", nil];
+    return [nameArray objectAtIndex:section];
+}
+*/
+
+-(NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index {
+
+    NSArray *nameArray = [NSArray arrayWithObjects:@"今", @"本", @"东", @"电", @"学", @"艺", @"乡", @"休", @"知", @"人", @"体", @"校", @"社", nil];
+    for(int i = 0; i < [nameArray count]; i++) {
+        if([title isEqualToString:[nameArray objectAtIndex:i]]) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+-(NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
+    NSArray *nameArray = [NSArray arrayWithObjects:
+                          @"今", @"", @"本", @"", @"东", @"", @"电", @"",
+                          @"学", @"", @"艺", @"", @"乡", @"", @"休", @"",
+                          @"知", @"", @"人", @"", @"体", @"", @"校", @"",
+                          @"社", nil];
+    return nameArray;
+}
 
 -(NSInteger) numberOfSectionsInTableView:(UITableView *)tableView
 {
-    return 1;
+    return [topTenArray count];
 }
 -(NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return [topTenArray count];
+    NSArray * array = [topTenArray objectAtIndex:section];
+    return [array count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -120,10 +133,10 @@
     if (cell == nil) {
         NSArray * array = [[NSBundle mainBundle] loadNibNamed:@"TopTenTableViewCell" owner:self options:nil];
         cell = [array objectAtIndex:0];
-        //[cell setSelectionStyle:UITableViewCellSelectionStyleNone];
     }
-        
-    Topic * topic = [topTenArray objectAtIndex:indexPath.row];
+    [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
+    
+    Topic * topic = [[topTenArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
     cell.ID = topic.ID;
     cell.title = topic.title;
     cell.time = topic.time;
@@ -133,32 +146,22 @@
     cell.board = topic.board;
     cell.unread = YES;
     cell.top = topic.top;
-    [cell setReadyToShow];
-    
+    cell.time = topic.time;
     return cell;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath   
 {
-    if (indexPath.row == [topTenArray count]-1) {
-        if (([topTenArray count]-1)*80 + 80 <= tableView.frame.size.height) {
-            return tableView.frame.size.height - ([topTenArray count]-1)*80 + 10;
-        }
-        return 80;
-    }
     return 80;
 }
 
 // Called after the user changes the selection.
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    
-    SingleTopicViewController * singleTopicViewController = [[SingleTopicViewController alloc] initWithNibName:@"SingleTopicViewController" bundle:nil];
-    singleTopicViewController.rootTopic = [topTenArray objectAtIndex:indexPath.row];
-    
+    Topic * topic = [[topTenArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+    SingleTopicViewController * singleTopicViewController = [[SingleTopicViewController alloc] initWithRootTopic:topic];
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    HomeViewController * home = appDelegate.homeViewController;
-    [home.navigationController pushViewController:singleTopicViewController animated:YES];
+    [appDelegate.homeViewController.navigationController pushViewController:singleTopicViewController animated:YES];
 }
 
 #pragma -
@@ -166,7 +169,20 @@
 -(void)refreshTable
 {
     @autoreleasepool {
-        self.topTenArray = [BBSAPI topTen];
+        NSMutableArray * allArray = [[NSMutableArray alloc] init];
+        NSArray *array;
+        array = [BBSAPI topTen];
+        if (array != nil) {
+            [allArray addObject:[BBSAPI topTen]];
+        }
+        
+        for (int i = 0; i < 12; i++) {
+            array = [BBSAPI sectionTopTen:i];
+            if (array != nil) {
+                [allArray addObject:array];
+            }
+        }
+        self.topTenArray = allArray;
         [self performSelectorOnMainThread:@selector(refreshTableView) withObject:nil waitUntilDone:NO];
     }
 }
@@ -179,5 +195,20 @@
 {
     [NSThread detachNewThreadSelector:@selector(refreshTable) toTarget:self withObject:nil];
 }
+
+
+
+#pragma mark - Rotation
+-(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
+    return YES;
+}
+- (BOOL)shouldAutorotate{
+    return YES;
+}
+-(NSUInteger)supportedInterfaceOrientations{
+    return UIInterfaceOrientationMaskAllButUpsideDown;
+}
+
+
 
 @end

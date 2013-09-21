@@ -132,12 +132,16 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    CGRect rect = [[UIScreen mainScreen] bounds];
+    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
+
     [self.view setBackgroundColor:[UIColor whiteColor]];
+    self.title = @"关于";
     
 	//add coretextview
     scrollView = [[UIScrollView alloc] initWithFrame:self.view.bounds];
 	scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    coreTextView = [[FTCoreTextView alloc] initWithFrame:CGRectMake(20, 20, 280, 0)];
+    coreTextView = [[FTCoreTextView alloc] initWithFrame:CGRectMake(20, 20, self.view.frame.size.width - 40, 0)];
 	coreTextView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     // set text
     [coreTextView setText:[self textForView]];
@@ -153,14 +157,6 @@
     [scrollView setContentSize:CGSizeMake(CGRectGetWidth(scrollView.bounds), CGRectGetHeight(coreTextView.frame) + 40)];
     [scrollView setShowsVerticalScrollIndicator:NO];
     [self.view addSubview:scrollView];
-    
-    /*
-    UIButton * backButton = [[UIButton alloc] initWithFrame:CGRectMake(10, 10, 40, 30)];
-    [backButton addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
-    [backButton setImage:[UIImage imageNamed:@"backnromal.png"] forState:UIControlStateNormal];
-    [backButton setAlpha:0.7];
-    [self.view addSubview:backButton];
-    */
     
     UISwipeGestureRecognizer* recognizer;
     recognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(back)];

@@ -28,41 +28,27 @@
     return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
 
--(void)setReadyToShow
-{
-    UIView *bgView = [[UIView alloc] init];
-    bgView.backgroundColor = [UIColor lightTextColor];
-    self.selectedBackgroundView = bgView;
+#pragma mark UIView
+- (void)layoutSubviews {
+	[super layoutSubviews];
+    notificationImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 12, 65)];
+    [self addSubview:notificationImageView];
+    if (mail.unread) {
+        [notificationImageView setBackgroundColor:[UIColor redColor]];
+    }
+    else
+    {
+        [notificationImageView setBackgroundColor:[UIColor whiteColor]];
+    }
     
     if (mail.type == 0)
-        [authorLabel setText:[NSString stringWithFormat:@"发件人：%@", mail.author]];
+        [authorLabel setText:[NSString stringWithFormat:@"%@", mail.author]];
     if (mail.type == 1)
-        [authorLabel setText:[NSString stringWithFormat:@"收件人：%@", mail.author]];
+        [authorLabel setText:[NSString stringWithFormat:@"%@", mail.author]];
     if (mail.type == 2)
-        [authorLabel setText:[NSString stringWithFormat:@"发件人：%@", mail.author]];
-    [titleLabel setText:mail.title];
-    if (!mail.unread) {
-        [unreadImage setHidden:YES];
-    }
-}
-
-- (void)bounce1AnimationStopped
-{
-	[UIView beginAnimations:nil context:nil];
-	[UIView setAnimationDuration:0.1];
-	[UIView setAnimationDelegate:self];
-	[UIView setAnimationDidStopSelector:@selector(bounce2AnimationStopped)];
-    self.transform = CGAffineTransformIdentity;
-	[UIView commitAnimations];
-}
-
--(void)showAinmationWhenSeleceted
-{
-    [UIView beginAnimations:nil context:nil];
-    [UIView setAnimationDuration:0.1];
-    [UIView setAnimationDelegate:self];
-    [UIView setAnimationDidStopSelector:@selector(bounce1AnimationStopped)];
-    self.transform = CGAffineTransformScale(CGAffineTransformIdentity, 0.98, 0.98);
-    [UIView commitAnimations];
+        [authorLabel setText:[NSString stringWithFormat:@"%@", mail.author]];
+    
+    [titleLabel setText:[NSString stringWithFormat:@"%@", mail.title]];
+    [timeLabel setText:[NSString stringWithFormat:@"%@", [BBSAPI dateToString:mail.time]]];
 }
 @end

@@ -16,17 +16,17 @@
 #import "SingleTopicViewController.h"
 #import "HomeViewController.h"
 
-@interface SearchTopicViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, TimeScrollerDelegate>
+@interface SearchTopicViewController : UIViewController<UITableViewDelegate, UITableViewDataSource>
 {
     NSString * searchString;
     NSMutableArray * topTenArray;
     CustomTableView * customTableView;
-    TimeScroller *_timeScroller;
-    MBProgressHUD * HUD;
+    FPActivityView* activityView;
     id mDelegate;
     MyBBS * myBBS;
 }
 @property(nonatomic, strong)NSString * searchString;
+@property(nonatomic, strong)NSMutableArray * topTenArray;
 @property(nonatomic, strong)id mDelegate;
 
 -(void)reloadData;

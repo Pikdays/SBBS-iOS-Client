@@ -10,8 +10,6 @@
 #import "HomeViewController.h"
 #import "AppDelegate.h"
 #import "CustomNoFooterTableView.h"
-#import "TimeScroller.h"
-#import "QuadCurveMenu.h"
 #import "BoardsCellView.h"
 #import "TopicsViewController.h"
 
@@ -20,11 +18,11 @@
 #import "BBSAPI.h"
 
 
-@interface BoardsViewController : UIViewController<TimeScrollerDelegate, MBProgressHUDDelegate>
+@interface BoardsViewController : UIViewController<MBProgressHUDDelegate>
 {
     NSArray * topTenArray;
     CustomNoFooterTableView * customTableView;
-    MBProgressHUD * HUD;
+    FPActivityView* activityView;
 }
 @property(nonatomic, strong)NSArray * topTenArray;
 

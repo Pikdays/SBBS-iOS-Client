@@ -11,17 +11,14 @@
 #import "BBSAPI.h"
 #import "UploadAttachmentsViewController.h"
 #import "HomeViewController.h"
-@interface PostTopicViewController : UIViewController<UITextFieldDelegate, UIViewPassValueDelegate>
+
+@interface PostTopicViewController : UIViewController<UITextFieldDelegate, UIViewPassValueDelegate, UIScrollViewDelegate>
 {
-    IBOutlet UILabel * topTitleLabel;
+    UITextField * postTitle;
+    UILabel * postTitleCount;
+    UITextView * postContent;
+    UIScrollView * postScrollView;
     
-    
-    IBOutlet UITextField * postTitle;
-    IBOutlet UILabel * postTitleCount;
-    IBOutlet UIButton * sendButton;
-    
-    IBOutlet UIImageView * postBack;
-    IBOutlet UITextView * postContent;
     MBProgressHUD * HUD;
     Topic * rootTopic;
     NSString * boardName;
@@ -31,14 +28,18 @@
     id __unsafe_unretained mDelegate;
     
     NSArray *attList;
+    
+    UIToolbar *keyboardToolbar;
 }
 @property(nonatomic, strong)Topic * rootTopic;
 @property(nonatomic, strong)NSString * boardName;
 @property(nonatomic, assign)int postType;
 @property(nonatomic, unsafe_unretained)id mDelegate;
 @property(nonatomic, strong)NSArray * attList;
--(IBAction)cancel:(id)sender;
--(IBAction)sent:(id)sender;
+-(void)cancel;
+-(void)send;
 -(IBAction)operateAtt:(id)sender;
--(IBAction)inputText:(id)sender;
+-(void)inputTitle;
+-(void)inputContent;
+
 @end

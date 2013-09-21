@@ -12,7 +12,6 @@
 #import "MyBBS.h"
 #import "SearchViewController.h"
 #import "TopTenViewController.h"
-#import "SectionTopTenViewController.h"
 #import "BoardsViewController.h"
 #import "AllSectionsViewController.h"
 #import "LoginViewController.h"
@@ -24,17 +23,23 @@
 #import "HomeViewController.h"
 #import "TopicsViewController.h"
 #import "AboutViewController.h"
-#import "GHMenuCell.h"
 
 @interface LeftViewController : UIViewController <UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, UIActionSheetDelegate, AboutViewControllerDelegate> {
     NSArray *tableTitles1;
     NSArray *tableTitles2;
     NSArray *tableTitles3;
     
+    NSArray *tableIcon1;
+    NSArray *tableIcon2;
+    NSArray *tableIcon3;
+    
     SearchViewController * searchViewController;
     IBOutlet UISearchBar * search;
     IBOutlet UITableView * mainTableView;
+    UIButton *settingsButton;
     MyBBS * myBBS;
+    BOOL isFirstTimeLoad;
+    NSIndexPath *selectedIndex;
 }
 @property(nonatomic, strong)IBOutlet UITableView * mainTableView;
 -(void)showNotification;

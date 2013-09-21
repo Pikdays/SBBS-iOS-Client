@@ -7,14 +7,24 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "DataModel.h"
+#import "AttachmentView.h"
+#import "ImageAttachmentView.h"
 
-@interface SingleTopicCommentCell : UITableViewCell
+
+@protocol SingleTopicCommentCellDelegate <NSObject>
+-(void)imageAttachmentViewInCellTaped:(int)indexRow Index:(int)indexNum;
+-(void)attachmentViewInCellTaped:(BOOL)isPhoto IndexRow:(int)indexRow IndexNum:(int)indexNum;
+@end
+
+@interface SingleTopicCommentCell : UITableViewCell<ImageAttachmentViewDelegate, AttachmentViewDelegate>
 {
     IBOutlet UILabel * authorLabel;
     IBOutlet UILabel * contentTextView;
     IBOutlet UILabel * commentToTextView;
     IBOutlet UILabel * loushu;
-    IBOutlet UIImageView * attNotifier;
+    IBOutlet UILabel * articleDateLabel;
+    
     int ID;
     NSDate * time;
     
@@ -22,26 +32,24 @@
     NSString * author;
     NSString * quoter;
     NSString * quote;
-    BOOL attExist;
-    BOOL attExistPhoto;
     int read;
     
     int num;
     
     NSArray * attachments;
-    UIViewController * attachmentsViewController;
+    NSMutableArray * attachmentsViewArray;
 }
-@property(nonatomic, assign)BOOL attExist;
-@property(nonatomic, assign)BOOL attExistPhoto;
 @property(nonatomic, assign)int ID;
+@property(nonatomic, assign)int read;
+@property(nonatomic, assign)int num;
 @property(nonatomic, strong)NSDate * time;
 @property(nonatomic, strong)NSString * author;
 @property(nonatomic, strong)NSString * content;
 @property(nonatomic, strong)NSString * quoter;
 @property(nonatomic, strong)NSString * quote;
 @property(nonatomic, strong)NSArray * attachments;
-@property(nonatomic, strong)UIViewController * attachmentsViewController;
-@property(nonatomic, assign)int read;
-@property(nonatomic, assign)int num;
--(void)setReadyToShow;
+@property(nonatomic, strong)NSMutableArray * attachmentsViewArray;
+
+@property(nonatomic, assign)int indexRow;
+@property(nonatomic, assign)id mDelegate;
 @end

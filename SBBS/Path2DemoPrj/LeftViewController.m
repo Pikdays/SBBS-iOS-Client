@@ -14,57 +14,59 @@
 - (void)viewDidLoad {
     CGRect rect = [[UIScreen mainScreen] bounds];
     [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
-    UIColor *bgColor = [UIColor colorWithRed:(50.0f/255.0f) green:(57.0f/255.0f) blue:(74.0f/255.0f) alpha:1.0f];
-    self.view.backgroundColor = bgColor;
-    self.mainTableView.backgroundColor = bgColor;
-    
-    self.navigationController.navigationBar.tintColor = [UIColor colorWithRed:(30.0f/255.0f) green:(37.0f/255.0f) blue:(54.0f/255.0f) alpha:1.0f];
-    
-    UIBarButtonItem * addFavButton = [[UIBarButtonItem alloc] initWithCustomView:[[UIView alloc] initWithFrame:CGRectMake(0, 0, 30, 40)]];
-    self.navigationItem.rightBarButtonItem = addFavButton;
-
+    self.title = @"虎踞龙蟠";
     self.navigationItem.titleView = search;
+    [self addSettingsButton];
+    isFirstTimeLoad = YES;
     
-    searchViewController = [[SearchViewController alloc] initWithNibName:@"SearchViewController" bundle:nil];
-    [searchViewController.view setFrame:CGRectMake(0, 0, 320, rect.size.height - 44)];
+    search.delegate = self;
+    
+    if (IS_IOS7) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+        [self.navigationController.navigationBar setBarTintColor:[UIColor colorWithRed:0.886 green:0.886 blue:0.886 alpha:1]];
+    }
+    else {
+        [self.navigationController.navigationBar setTintColor:[UIColor colorWithRed:0.886 green:0.886 blue:0.886 alpha:1]];
+        [search setTintColor:[UIColor colorWithRed:0.886 green:0.886 blue:0.886 alpha:1]];
+    }
+    
+    searchViewController = [[SearchViewController alloc] init];
+    [searchViewController.view setFrame:CGRectMake(0, 0, self.view.frame.size.width, rect.size.height)];
     [searchViewController.view setAlpha:0];
-    [self.view insertSubview:searchViewController.view atIndex:2];
+    [self.view addSubview:searchViewController.view];
     
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     myBBS = appDelegate.myBBS;
     
-    tableTitles1 = [NSArray arrayWithObjects:@"今日十大",@"分区十大",@"人气版面",@"分类讨论区",nil];
-    if(myBBS.mySelf.ID != nil)
-    {
-        tableTitles2 = [NSArray arrayWithObjects:@"收藏",@"好友",@"站内信", @"新消息", @"设置",nil];
+    tableTitles1 = [NSArray arrayWithObjects:@"热门帖子", @"人气版面", @"分类讨论区",nil];
+    if(myBBS.mySelf.ID != nil){
+        tableTitles2 = [NSArray arrayWithObjects:@"收藏", @"好友", @"站内信", @"新消息", nil];
         tableTitles3 = [NSArray arrayWithObjects:[NSString stringWithFormat:@"%@",myBBS.mySelf.ID], nil];
     }
-    else
-    {
+    else{
         tableTitles2 = [NSArray arrayWithObjects:@"登录",nil];
         tableTitles3 = [NSArray arrayWithObjects:@"未登录", nil];
     }
-    search.delegate = self;
-    search.keyboardType = UIKeyboardTypeDefault;
-    search.autocapitalizationType = UITextAutocapitalizationTypeNone;
-	search.autocorrectionType = UITextAutocorrectionTypeNo;
-    search.tintColor = [UIColor colorWithRed:(30.0f/255.0f) green:(37.0f/255.0f) blue:(54.0f/255.0f) alpha:1.0f];
-	search.placeholder = @"搜索";
-	for (UIView *subview in search.subviews) {
-		if ([subview isKindOfClass:[UITextField class]]) {
-			UITextField *searchTextField = (UITextField *) subview;
-			searchTextField.textColor = [UIColor colorWithRed:(154.0f/255.0f) green:(162.0f/255.0f) blue:(176.0f/255.0f) alpha:1.0f];
-		}
-	}
-	[search setSearchFieldBackgroundImage:[[UIImage imageNamed:@"searchTextBG.png"]
-                                resizableImageWithCapInsets:UIEdgeInsetsMake(16.0f, 17.0f, 16.0f, 17.0f)]
-                                                    forState:UIControlStateNormal];
-	[search setImage:[UIImage imageNamed:@"searchBarIcon.png"]
-							 forSearchBarIcon:UISearchBarIconSearch
-										state:UIControlStateNormal];
+    
+    tableIcon1 = [NSArray arrayWithObjects:@"top10.png", @"hot.png", @"more.png",nil];
+    tableIcon2 = [NSArray arrayWithObjects:@"star.png", @"friend.png", @"letter.png", @"message.png", nil];
+    //tableIcon3 = [NSArray arrayWithObjects:@"热门帖子", @"人气版面", @"分类讨论区",nil];
+    
     [super viewDidLoad];
 }
 
+
+- (void) addSettingsButton
+{
+    settingsButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 10, 25, 25)];
+    [settingsButton setImage:[UIImage imageNamed:@"setting.png"] forState:UIControlStateNormal];
+    [settingsButton addTarget:self action:@selector(clickSettings) forControlEvents:UIControlEventTouchUpInside];
+    
+    UIView* tools = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width - 185, 45)];
+    [tools addSubview:settingsButton];
+    UIBarButtonItem *myBtn = [[UIBarButtonItem alloc] initWithCustomView:tools];
+    self.navigationItem.rightBarButtonItem = myBtn;
+}
 
 - (void)viewDidUnload {
     [super viewDidUnload];
@@ -79,17 +81,83 @@
     myBBS = nil;
 }
 
+-(void)clickSettings
+{
+    [UIView animateWithDuration:0.3
+                     animations:^{
+                         settingsButton.transform = CGAffineTransformMakeRotation((90.0f * M_PI) / 180.0f);
+                     }
+                     completion:^(BOOL finished){
+                         AppDelegate * appdelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+                         [appdelegate showLeftViewTotaly];
+                         
+                         AboutViewController * aboutViewController = [[AboutViewController alloc] initWithNibName:@"AboutViewController" bundle:nil];
+                         aboutViewController.mDelegate = self;
+                         UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:aboutViewController];
+                         nc.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+                         [self presentViewController:nc animated:YES completion:nil];
+                     }];
+}
 
 #pragma mark - UITableView delegate
 // Section Titles
 //每个section显示的标题
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 30;
+}
 
-- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
-    if(section == 0)
-        return @"全站";
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView* myView = [[UIView alloc] init];
+    if(section == 0) {
+        myView.backgroundColor = [UIColor colorWithRed:0.85 green:0.85 blue:0.85 alpha:1];
+        //myView.backgroundColor = [UIColor darkGrayColor];
+        
+        UIImageView *headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(15, 3, 24, 24)];
+        [headImageView setBackgroundColor:[UIColor clearColor]];
+        [headImageView setImage:[UIImage imageNamed:@"frofile1.png"]];
+        [myView addSubview:headImageView];
+        headImageView.layer.cornerRadius = 12.0f;
+        headImageView.clipsToBounds = YES;
+
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(53, 0, 110, 30)];
+        titleLabel.font = [UIFont boldSystemFontOfSize:15];
+        titleLabel.textColor = [UIColor blackColor];
+        titleLabel.backgroundColor = [UIColor clearColor];
+        titleLabel.text = @"虎踞龙蟠";
+        [myView addSubview:titleLabel];
+    }
     if(section == 1)
-        return [tableTitles3 objectAtIndex:0];
-    return @"";
+    {
+        myView.backgroundColor = [UIColor colorWithRed:0.85 green:0.85 blue:0.85 alpha:1];
+        //myView.backgroundColor = [UIColor darkGrayColor];
+        
+        if (myBBS.mySelf.avatar != nil) {
+            UIImageView *headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(15, 3, 24, 24)];
+            [headImageView setBackgroundColor:[UIColor clearColor]];
+            [headImageView setImageWithURL:myBBS.mySelf.avatar];
+            [myView addSubview:headImageView];
+            headImageView.layer.cornerRadius = 12.0f;
+            headImageView.clipsToBounds = YES;
+            
+            UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(53, 0, 110, 30)];
+            titleLabel.font = [UIFont boldSystemFontOfSize:15];
+            titleLabel.textColor = [UIColor blackColor];
+            titleLabel.backgroundColor = [UIColor clearColor];
+            titleLabel.text = [tableTitles3 objectAtIndex:0];
+            [myView addSubview:titleLabel];
+        }
+        else {
+            UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(13, 0, 170, 30)];
+            titleLabel.font = [UIFont boldSystemFontOfSize:15];
+            titleLabel.textColor = [UIColor blackColor];
+            titleLabel.backgroundColor = [UIColor clearColor];
+            titleLabel.text = [tableTitles3 objectAtIndex:0];
+            [myView addSubview:titleLabel];
+        }
+    }
+    return myView;
 }
 
 
@@ -107,47 +175,7 @@
     if (section == 1) {
         return [tableTitles2 count];
     }
-    if (section == 2) {
-        return [tableTitles3 count];
-    }
     return 0;
-}
-
-- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
-    NSObject *headerText;
-    if(section == 0)
-        headerText = @"全站";
-    if(section == 1)
-        headerText = [tableTitles3 objectAtIndex:0];
-	UIView *headerView = nil;
-	if (headerText != [NSNull null]) {
-		headerView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, [UIScreen mainScreen].bounds.size.height, 21.0f)];
-		CAGradientLayer *gradient = [CAGradientLayer layer];
-		gradient.frame = headerView.bounds;
-		gradient.colors = @[
-                      (id)[UIColor colorWithRed:(67.0f/255.0f) green:(74.0f/255.0f) blue:(94.0f/255.0f) alpha:1.0f].CGColor,
-                      (id)[UIColor colorWithRed:(57.0f/255.0f) green:(64.0f/255.0f) blue:(82.0f/255.0f) alpha:1.0f].CGColor,
-                      ];
-		[headerView.layer insertSublayer:gradient atIndex:0];
-		
-		UILabel *textLabel = [[UILabel alloc] initWithFrame:CGRectInset(headerView.bounds, 12.0f, 5.0f)];
-		textLabel.text = (NSString *) headerText;
-		textLabel.font = [UIFont fontWithName:@"Helvetica-Bold" size:([UIFont systemFontSize] * 0.9f)];
-		textLabel.shadowOffset = CGSizeMake(0.0f, 1.0f);
-		textLabel.shadowColor = [UIColor colorWithWhite:0.0f alpha:0.25f];
-		textLabel.textColor = [UIColor colorWithRed:(125.0f/255.0f) green:(129.0f/255.0f) blue:(146.0f/255.0f) alpha:1.0f];
-		textLabel.backgroundColor = [UIColor clearColor];
-		[headerView addSubview:textLabel];
-		
-		UIView *topLine = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, [UIScreen mainScreen].bounds.size.height, 1.0f)];
-		topLine.backgroundColor = [UIColor colorWithRed:(78.0f/255.0f) green:(86.0f/255.0f) blue:(103.0f/255.0f) alpha:1.0f];
-		[headerView addSubview:topLine];
-		
-		UIView *bottomLine = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 21.0f, [UIScreen mainScreen].bounds.size.height, 1.0f)];
-		bottomLine.backgroundColor = [UIColor colorWithRed:(36.0f/255.0f) green:(42.0f/255.0f) blue:(5.0f/255.0f) alpha:1.0f];
-		[headerView addSubview:bottomLine];
-	}
-	return headerView;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -156,78 +184,118 @@
         NotificationCell * cell = (NotificationCell *)[tableView dequeueReusableCellWithIdentifier:@"NotificationCell"];
         if (cell == nil) {
             cell = [[NotificationCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"NotificationCell"];
-            [cell.textLabel setText:@"新消息"];
-            [cell setAccessoryType:UITableViewCellAccessoryNone];
+            cell.backgroundColor = [UIColor colorWithRed:0.886 green:0.886 blue:0.886 alpha:1];
+            
+            UIView *bgViewIndication = [[UIView alloc] init];
+            [bgViewIndication setFrame:CGRectMake(0, 0, 5, 44)];
+            bgViewIndication.backgroundColor = [UIColor colorWithRed:0.07 green:0.51 blue:1 alpha:1];
+            
+            
+            UIView *bgView = [[UIView alloc] init];
+            bgView.backgroundColor = [UIColor clearColor];
+            [bgView addSubview:bgViewIndication];
+            
+            cell.selectedBackgroundView = bgView;
+            
+            [cell.textLabel setFont:[UIFont boldSystemFontOfSize:17]];
+            [cell.textLabel setHighlightedTextColor:[UIColor blackColor]];
+            [cell.imageView setImage:[UIImage imageNamed:[tableIcon2 objectAtIndex:indexPath.row]]];
         }
         cell.notification = myBBS.notification;
         [cell refreshCell];
         return cell;
     }
     
-    static NSString *CellIdentifier = @"GHMenuCell";
-	GHMenuCell *cell = (GHMenuCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    static NSString *CellIdentifier = @"MenuCell";
+    UITableViewCell *cell = (UITableViewCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    
     if (cell == nil) {
-        cell = [[GHMenuCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
-        //[cell setSelectionStyle:UITableViewCellSelectionStyleNone];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
 	}
+    
+    cell.backgroundColor = [UIColor colorWithRed:0.886 green:0.886 blue:0.886 alpha:1];
+    
+    UIView *bgViewIndication = [[UIView alloc] init];
+    [bgViewIndication setFrame:CGRectMake(0, 0, 5, 44)];
+    bgViewIndication.backgroundColor = [UIColor colorWithRed:0.07 green:0.51 blue:1 alpha:1];
 
+    
+    UIView *bgView = [[UIView alloc] init];
+    bgView.backgroundColor = [UIColor clearColor];
+    [bgView addSubview:bgViewIndication];
+    
+    cell.selectedBackgroundView = bgView;
+    //[cell.selectedBackgroundView setBackgroundColor:[UIColor lightGrayColor]];
+    [cell.textLabel setFont:[UIFont boldSystemFontOfSize:17]];
+    [cell.textLabel setHighlightedTextColor:[UIColor blackColor]];
+    
+    if(isFirstTimeLoad){
+        // 默认选中第一行
+        NSIndexPath *selectedIndexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+        [tableView selectRowAtIndexPath:selectedIndexPath animated:NO scrollPosition:UITableViewScrollPositionNone];
+    }
+    else {
+        [tableView selectRowAtIndexPath:selectedIndex animated:NO scrollPosition:UITableViewScrollPositionNone];
+    }
+    
     if (indexPath.section == 0) {
         cell.textLabel.text = [tableTitles1 objectAtIndex:indexPath.row];
-        if (indexPath.row != 0) {
-            [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
-        }
-        else {
-            [cell setAccessoryType:UITableViewCellAccessoryNone];
-        }
+        [cell.imageView setImage:[UIImage imageNamed:[tableIcon1 objectAtIndex:indexPath.row]]];
     }
     if (indexPath.section == 1) {
         cell.textLabel.text = [tableTitles2 objectAtIndex:indexPath.row];
-        if (myBBS.mySelf.ID == nil) {
-            [cell setAccessoryType:UITableViewCellAccessoryNone];
-        }
-        else {
-            if (indexPath.row != 3 && indexPath.row != 4) {
-                [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
-            }
-            else {
-                [cell setAccessoryType:UITableViewCellAccessoryNone];
-            }
-        }
-    }
-    if (indexPath.section == 2) {
-        cell.textLabel.text = [tableTitles3 objectAtIndex:indexPath.row];
+        [cell.imageView setImage:[UIImage imageNamed:[tableIcon2 objectAtIndex:indexPath.row]]];
     }
 	return cell;
 }
 
 // Called after the user changes the selection.
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    //[tableView deselectRowAtIndexPath:indexPath animated:YES];
+    isFirstTimeLoad = NO;
+    selectedIndex = indexPath;
     
     if (indexPath.row == 0 && indexPath.section == 0) {
-        TopTenViewController * topicsViewController = [[TopTenViewController alloc] initWithNibName:@"TopTenViewController" bundle:nil];
+        TopTenViewController * topicsViewController = [[TopTenViewController alloc] init];
         AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-        HomeViewController * home = appDelegate.homeViewController;
-        [home restoreViewLocation];
-        [home removeOldViewController];
-        home.realViewController = topicsViewController;
-        [home showViewController:@"今日十大"];
+        if([appDelegate.homeViewController.title isEqualToString:@"热门帖子"]) {
+            [appDelegate.homeViewController restoreViewLocation];
+        }
+        else {
+            [appDelegate.homeViewController restoreViewLocation];
+            [appDelegate.homeViewController removeOldViewController];
+            appDelegate.homeViewController.realViewController = topicsViewController;
+            [appDelegate.homeViewController showViewController:@"热门帖子"];
+        }
     }
     if (indexPath.row == 1 && indexPath.section == 0) {
-        AllSectionsViewController * allSectionsViewController = [[AllSectionsViewController alloc] initWithNibName:@"AllSectionsViewController" bundle:nil];
-        allSectionsViewController.topTitleString = @"分区十大";
-        allSectionsViewController.isMenu = TRUE;
-        allSectionsViewController.isForSectionTopTen = TRUE;
-        [self.navigationController pushViewController:allSectionsViewController animated:YES];
+        BoardsViewController * boardsViewController = [[BoardsViewController alloc] init];
+ 
+        AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+        if([appDelegate.homeViewController.title isEqualToString:@"人气版面"]) {
+            [appDelegate.homeViewController restoreViewLocation];
+        }
+        else {
+            [appDelegate.homeViewController restoreViewLocation];
+            [appDelegate.homeViewController removeOldViewController];
+            appDelegate.homeViewController.realViewController = boardsViewController;
+            [appDelegate.homeViewController showViewController:@"人气版面"];
+        }
+        
     }
     if (indexPath.row == 2 && indexPath.section == 0) {
-        BoardsViewController * boardsViewController = [[BoardsViewController alloc] initWithNibName:@"BoardsViewController" bundle:nil];
-        [self.navigationController pushViewController:boardsViewController animated:YES];
-    }
-    if (indexPath.row == 3 && indexPath.section == 0) {
-        AllSectionsViewController * allSectionsViewController = [[AllSectionsViewController alloc] initWithNibName:@"AllSectionsViewController" bundle:nil];
+        AllSectionsViewController * allSectionsViewController = [[AllSectionsViewController alloc] init];
         allSectionsViewController.topTitleString = @"分类讨论区";
-        [self.navigationController pushViewController:allSectionsViewController animated:YES];
+        AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+        if([appDelegate.homeViewController.title isEqualToString:@"分类讨论区"]) {
+            [appDelegate.homeViewController restoreViewLocation];
+        }
+        else {
+            [appDelegate.homeViewController restoreViewLocation];
+            [appDelegate.homeViewController removeOldViewController];
+            appDelegate.homeViewController.realViewController = allSectionsViewController;
+            [appDelegate.homeViewController showViewController:@"分类讨论区"];
+        }
     }
     
     if (myBBS.mySelf.ID == nil) {
@@ -236,94 +304,81 @@
             loginViewController.mDelegate = self;
             AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
             [appDelegate showLeftViewTotaly];
-            [self presentModalViewController:loginViewController animated:YES];
+            [self presentViewController:loginViewController animated:YES completion:nil];
         }
     }
     if (myBBS.mySelf.ID != nil) {
-        if (indexPath.row == -1 && indexPath.section == 1) {
-            NSUserDefaults * defaults = [NSUserDefaults standardUserDefaults];
-            BOOL * isLoadAvatar = [defaults boolForKey:@"isLoadAvatar"];
-            UserInfoViewController * userInfoViewController;
-            if (isLoadAvatar) {
-                userInfoViewController = [[UserInfoViewController alloc] initWithNibName:@"UserInfoViewController" bundle:nil];
+        if (indexPath.row == 0 && indexPath.section == 1) {
+            
+            AllFavViewController *allFavViewController = [[AllFavViewController alloc] init];
+            allFavViewController.topTitleString = @"收藏";
+            
+            AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+            if([appDelegate.homeViewController.title isEqualToString:@"收藏"]) {
+                [appDelegate.homeViewController restoreViewLocation];
             }
             else {
-                userInfoViewController = [[UserInfoViewController alloc] initWithNibName:@"UserInfoViewController_noAvatar" bundle:nil];
+                [appDelegate.homeViewController restoreViewLocation];
+                [appDelegate.homeViewController removeOldViewController];
+                appDelegate.homeViewController.realViewController = allFavViewController;
+                [appDelegate.homeViewController showViewController:@"收藏"];
             }
-
-            userInfoViewController.userString = myBBS.mySelf.ID;
-            AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-            HomeViewController * home = appDelegate.homeViewController;
-            [home restoreViewLocation];
-            [home removeOldViewController];
-            home.realViewController = userInfoViewController;
-            [home showViewController:@"我的信息"];
-        }
-        if (indexPath.row == 0 && indexPath.section == 1) {
-            AllFavViewController * allFavViewController = [[AllFavViewController alloc] initWithNibName:@"AllFavViewController" bundle:nil];
-            allFavViewController.topTitleString = @"收藏";
-            [self.navigationController pushViewController:allFavViewController animated:YES];
         }
         if (indexPath.row == 1 && indexPath.section == 1) {
-            FriendsViewController * friendsViewController = [[FriendsViewController alloc] initWithNibName:@"FriendsViewController" bundle:nil];
-            [self.navigationController pushViewController:friendsViewController animated:YES];
+            AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+            FriendsViewController * friendsViewController = [[FriendsViewController alloc] init];
+            
+            if([appDelegate.homeViewController.title isEqualToString:@"好友"]) {
+                [appDelegate.homeViewController restoreViewLocation];
+            }
+            else {
+                [appDelegate.homeViewController restoreViewLocation];
+                [appDelegate.homeViewController removeOldViewController];
+                appDelegate.homeViewController.realViewController = friendsViewController;
+                [appDelegate.homeViewController showViewController:@"好友"];
+            }
         }
         if (indexPath.row == 2 && indexPath.section == 1) {
-            MailBoxViewController * mailBoxViewController = [[MailBoxViewController alloc] initWithNibName:@"MailBoxViewController" bundle:nil];
-            [self.navigationController pushViewController:mailBoxViewController animated:YES];
+            AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+            MailBoxViewController * mailBoxViewController = [[MailBoxViewController alloc] init];
+            
+            if([appDelegate.homeViewController.title isEqualToString:@"站内信"]) {
+                [appDelegate.homeViewController restoreViewLocation];
+            }
+            else {
+                [appDelegate.homeViewController restoreViewLocation];
+                [appDelegate.homeViewController removeOldViewController];
+                appDelegate.homeViewController.realViewController = mailBoxViewController;
+                [appDelegate.homeViewController showViewController:@"站内信"];
+            }
         }
         if (indexPath.row == 3 && indexPath.section == 1) {
             [self showNotification];
-        }
-        if (indexPath.row == 4 && indexPath.section == 1) {
-            
-            AppDelegate * appdelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-            [appdelegate showLeftViewTotaly];
-            
-            AboutViewController * aboutViewController = [[AboutViewController alloc] initWithNibName:@"AboutViewController" bundle:nil];
-            aboutViewController.mDelegate = self;
-            UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:aboutViewController];
-            nc.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-            [nc.navigationBar setHidden:YES];
-            [self presentModalViewController:nc animated:YES];
         }
     }
 }
 
 #pragma mark - UIsearchBarDelegate
--(void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar{    
+-(void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar{
     AppDelegate * appdelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     appdelegate.isSearching = YES;
     [UIView beginAnimations:nil context:nil];
 	[UIView setAnimationDuration:0.3];
 	[UIView setAnimationDelegate:self];
-	[UIView setAnimationDidStopSelector:@selector(bounce2AnimationStopped)];
     [mainTableView setAlpha:0];
     [searchViewController.view setAlpha:0];
-    searchBar.showsCancelButton = YES;
 	[UIView commitAnimations];
-    
     [appdelegate showLeftViewTotaly];
-
-    self.navigationItem.rightBarButtonItem = nil;
     
-    for(id cc in [searchBar subviews])
-    {
-        if([cc isKindOfClass:[UIButton class]])
-        {
-            UIButton *sbtn = (UIButton *)cc;
-            [sbtn setTitle:@"取消"  forState:UIControlStateNormal];
-            [sbtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-            [sbtn setTintColor:[UIColor clearColor]];
-        }
-    }
+    UIBarButtonItem *cancelButton=[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(searchBarCancelButtonClicked:)];
+    self.navigationItem.rightBarButtonItem = cancelButton;
 }
+
 - (void)searchBarSearchButtonClicked:(UISearchBar *)sBar
-{ 
+{
     [UIView beginAnimations:nil context:nil];
 	[UIView setAnimationDuration:0.3];
 	[UIView setAnimationDelegate:self];
-	[UIView setAnimationDidStopSelector:@selector(bounce2AnimationStopped)];
     [searchViewController.view setAlpha:1];
 	[UIView commitAnimations];
     
@@ -332,32 +387,30 @@
     [searchViewController refreshSearching];
     [search resignFirstResponder];
 }
+
 -(void)searchBarCancelButtonClicked:(UISearchBar *)searchBar
 {
-    [searchBar setText:@""];
+    [search setText:@""];
     AppDelegate * appdelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     appdelegate.isSearching = NO;
+    
     //点击取消响应事件
+    [searchViewController.view setAlpha:0];
     [UIView beginAnimations:nil context:nil];
 	[UIView setAnimationDuration:0.3];
 	[UIView setAnimationDelegate:self];
-	[UIView setAnimationDidStopSelector:@selector(bounce2AnimationStopped)];
-    searchBar.showsCancelButton = NO;
     [mainTableView setAlpha:1];
 	[UIView commitAnimations];
     
-    UIBarButtonItem * addFavButton = [[UIBarButtonItem alloc] initWithCustomView:[[UIView alloc] initWithFrame:CGRectMake(0, 0, 30, 40)]];
-    self.navigationItem.rightBarButtonItem = addFavButton;
-    
-    [searchBar resignFirstResponder];
+    [self addSettingsButton];
+    [search resignFirstResponder];
     [appdelegate showLeftView];
 }
-
 
 #pragma mark - LoginViewDelegate
 -(void)LoginSuccess
 {
-    NSArray * new = [NSArray arrayWithObjects:@"收藏",@"好友",@"站内信", @"新消息",@"设置",nil];
+    NSArray * new = [NSArray arrayWithObjects:@"收藏",@"好友",@"站内信", @"新消息", nil];
     if (tableTitles2 != new) {
         tableTitles2 = new;
     }
@@ -372,21 +425,27 @@
 
 #pragma mark - Rotation
 -(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
-    return NO;
+    return YES;
 }
 - (BOOL)shouldAutorotate{
-    return NO;
+    return YES;
 }
 -(NSUInteger)supportedInterfaceOrientations{
-    return UIInterfaceOrientationMaskPortrait;
+    return UIInterfaceOrientationMaskAllButUpsideDown;
 }
 
 #pragma mark - AboutViewDelegate
 -(void)dismissAboutView
 {
-    [self dismissModalViewControllerAnimated:YES];
-    AppDelegate * appdelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    [appdelegate showLeftView];
+    [self dismissViewControllerAnimated:YES completion:nil];
+    [UIView animateWithDuration:0.3
+                     animations:^{
+                         settingsButton.transform = CGAffineTransformIdentity;
+                     }
+                     completion:^(BOOL finished){
+                         AppDelegate * appdelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+                         [appdelegate showLeftView];
+                     }];
 }
 
 -(void)logout{
@@ -399,13 +458,13 @@
     if (tableTitles3 != new2) {
         tableTitles3 = new2;
     }
-    ////modified by joe//////
+    
     [mainTableView reloadData];
 }
 
 -(void)showNotification
 {
-    NotificationViewController * notificationViewController = [[NotificationViewController alloc] initWithNibName:@"NotificationViewController" bundle:nil];
+    NotificationViewController * notificationViewController = [[NotificationViewController alloc] init];
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     HomeViewController * home = appDelegate.homeViewController;
     [home restoreViewLocation];

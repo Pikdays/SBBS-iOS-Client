@@ -26,6 +26,7 @@
 
 -(void)refreshAllSections;
 -(User *)userLogin:(NSString *)user Pass:(NSString *)pass;
+-(BOOL)addPushNotificationToken;
 -(void)userLogout;
 -(void)refreshNotification;
 -(void)clearNotification;

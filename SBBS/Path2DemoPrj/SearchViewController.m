@@ -10,15 +10,18 @@
 
 @implementation SearchViewController
 @synthesize searchString;
+@synthesize seg;
+@synthesize searchBoardViewController;
+@synthesize searchTopicViewController;
+@synthesize searchUserViewController;
 
-
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id)init
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super init];
     if (self) {
-        searchBoardViewController = [[SearchBoardViewController alloc] initWithNibName:@"SearchBoardViewController" bundle:nil];
-        searchTopicViewController = [[SearchTopicViewController alloc] initWithNibName:@"SearchTopicViewController" bundle:nil];
-        searchUserViewController = [[SearchUserViewController alloc] initWithNibName:@"SearchUserViewController" bundle:nil];
+        self.searchBoardViewController = [[SearchBoardViewController alloc] init];
+        self.searchTopicViewController = [[SearchTopicViewController alloc] init];
+        self.searchUserViewController = [[SearchUserViewController alloc] init];
     }
     return self;
 }
@@ -27,13 +30,34 @@
 {
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
-    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height - 64)];
-    [searchBoardViewController.view setFrame:CGRectMake(0, 44, 320, rect.size.height-64)];
-    [searchTopicViewController.view setFrame:CGRectMake(0, 44, 320, rect.size.height-108)];
-    [searchUserViewController.view setFrame:CGRectMake(0, 44, 320, rect.size.height-108)];
+    [self.view setBackgroundColor:[UIColor whiteColor]];
+    //[self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height - 64)];
     
-    [self.view addSubview:searchBoardViewController.view];
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
+    if (IS_IOS7) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+    }
+    
+    UIToolbar * toolbar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 44)];
+    NSArray * itemArray = [NSArray arrayWithObjects:@"版面", @"文章", @"用户", nil];
+    self.seg = [[UISegmentedControl alloc] initWithItems:itemArray];
+    [seg setSelectedSegmentIndex:0];
+    [seg setFrame:CGRectMake(6, 7, self.view.frame.size.width - 10, 30)];
+    [seg addTarget:self action:@selector(segmentControlValueChanged:) forControlEvents:UIControlEventValueChanged];
+    
+    if (!IS_IOS7) {
+        [seg setSegmentedControlStyle:UISegmentedControlStyleBar];
+        [seg setTintColor:[UIColor lightGrayColor]];
+        [toolbar setTintColor:[UIColor lightGrayColor]];
+    }
+    
+    [toolbar addSubview:seg];
+    [self.view addSubview:toolbar];
+    
+    [searchBoardViewController.view setFrame:CGRectMake(0, 44, self.view.frame.size.width, rect.size.height - 108)];
+    [searchTopicViewController.view setFrame:CGRectMake(0, 44, self.view.frame.size.width, rect.size.height - 108)];
+    [searchUserViewController.view setFrame:CGRectMake(0, 44, self.view.frame.size.width, rect.size.height - 108)];
+    
+    [self.view insertSubview:searchBoardViewController.view atIndex:0];
 }
 
 - (void)viewDidUnload
@@ -45,24 +69,9 @@
 -(void)dealloc
 {
     searchBoardViewController = nil;
-    
     searchTopicViewController = nil;
-    
     searchUserViewController = nil;
-    
 }
-
-#pragma mark - Rotation
--(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
-    return (toInterfaceOrientation == UIInterfaceOrientationPortrait);
-}
-- (BOOL)shouldAutorotate{
-    return NO;
-}
--(NSUInteger)supportedInterfaceOrientations{
-    return UIInterfaceOrientationMaskPortrait;
-}
-
 
 -(void)refreshSearching
 {
@@ -81,21 +90,32 @@
         case 0:
             [searchTopicViewController.view removeFromSuperview];
             [searchUserViewController.view removeFromSuperview];
-            [self.view addSubview:searchBoardViewController.view];
+            [self.view insertSubview:searchBoardViewController.view atIndex:0];
             break;
         case 1:
             [searchBoardViewController.view removeFromSuperview];
             [searchUserViewController.view removeFromSuperview];
-            [self.view addSubview:searchTopicViewController.view];
+            [self.view insertSubview:searchTopicViewController.view atIndex:0];
             break;
         case 2:
             [searchTopicViewController.view removeFromSuperview];
             [searchBoardViewController.view removeFromSuperview];
-            [self.view addSubview:searchUserViewController.view];
+            [self.view insertSubview:searchUserViewController.view atIndex:0];
             break;
         default:
             break;
     }
+}
+
+#pragma mark - Rotation
+-(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
+    return YES;
+}
+- (BOOL)shouldAutorotate{
+    return YES;
+}
+-(NSUInteger)supportedInterfaceOrientations{
+    return UIInterfaceOrientationMaskAllButUpsideDown;
 }
 
 @end

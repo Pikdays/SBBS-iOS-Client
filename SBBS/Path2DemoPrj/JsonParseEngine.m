@@ -335,10 +335,13 @@
             topic.time = time;
             topic.read = read;
             
-            if ([quote length] > 20)
-                topic.quote = [quote substringToIndex:20];
-            else 
+            if ([quote length] > 12) {
+                topic.quote = [quote substringToIndex:12];
+            }
+            else {
                 topic.quote = quote;
+            }
+            
             topic.quoter =quoter;
             [topTen addObject:topic];
         }
@@ -357,7 +360,14 @@
         User * user = [[User alloc] init];
         user.ID = [loginDictionary objectForKey:@"id"];
         user.name = [loginDictionary objectForKey:@"name"];
-        user.avatar = [NSURL URLWithString:[loginDictionary objectForKey:@"avatar"]];
+        NSString * avatarString = [loginDictionary objectForKey:@"avatar"];
+        if ([avatarString hasSuffix:@".png"] || [avatarString hasSuffix:@".jpeg"] || [avatarString hasSuffix:@".jpg"] || [avatarString hasSuffix:@".tiff"] || [avatarString hasSuffix:@".bmp"])
+        {
+            user.avatar = [NSURL URLWithString:[loginDictionary objectForKey:@"avatar"]];
+        }
+        else {
+            user.avatar = nil;
+        }
                        
         NSTimeInterval interval = [[loginDictionary objectForKey:@"lastlogin"] doubleValue];            
         NSDate *time = [NSDate dateWithTimeIntervalSince1970:interval];

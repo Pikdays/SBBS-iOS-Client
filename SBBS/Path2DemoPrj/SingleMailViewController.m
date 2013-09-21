@@ -28,55 +28,66 @@
     self.mail = [BBSAPI getSingleMail:myBBS.mySelf.token Type:rootMail.type ID:rootMail.ID];
     
     if (mail.type == 0)
-        [authorLabel setText:[NSString stringWithFormat:@"发件人：%@", mail.author]];
+        [authorLabel setText:[NSString stringWithFormat:@"%@", mail.author]];
     if (mail.type == 1)
-        [authorLabel setText:[NSString stringWithFormat:@"收件人：%@", mail.author]];
+        [authorLabel setText:[NSString stringWithFormat:@"%@", mail.author]];
     if (mail.type == 2)
-        [authorLabel setText:[NSString stringWithFormat:@"发件人：%@", mail.author]];
+        [authorLabel setText:[NSString stringWithFormat:@"%@", mail.author]];
     [titleLabel setText:mail.title];
     [content setText:mail.content];
+    [timeLabel setText:[BBSAPI dateToString:mail.time]];
     
     [scrollView addSubview:realView];
     
-    UIFont *font = [UIFont systemFontOfSize:15.0];
-    CGSize size = [mail.content sizeWithFont:font constrainedToSize:CGSizeMake(290, 10000) lineBreakMode:UILineBreakModeWordWrap];
+    UIFont *font = [UIFont systemFontOfSize:17.0];
+    CGSize size = [mail.content sizeWithFont:font constrainedToSize:CGSizeMake(self.view.frame.size.width - 30, 10000) lineBreakMode:NSLineBreakByWordWrapping];
 
-    [content setFrame:CGRectMake(content.frame.origin.x, content.frame.origin.y, content.frame.size.width, size.height)];
-    
+    [content setFrame:CGRectMake(content.frame.origin.x, content.frame.origin.y, self.view.frame.size.width - 30, size.height)];
 
-    [realView setFrame:CGRectMake(0, 0, 320, content.frame.origin.y + size.height)];
-    [scrollView setContentSize:CGSizeMake(320, content.frame.origin.y + size.height+10)];
-    if (content.frame.origin.y + size.height+10 <= 480) {
-        [scrollView setContentSize:CGSizeMake(320, 490)];
+    [realView setFrame:CGRectMake(0, 0, self.view.frame.size.width, content.frame.origin.y + size.height)];
+    [scrollView setContentSize:CGSizeMake(self.view.frame.size.width, content.frame.origin.y + size.height+10)];
+    if (content.frame.origin.y + size.height+10 <= self.view.frame.size.height) {
+        [scrollView setContentSize:CGSizeMake(self.view.frame.size.width, self.view.frame.size.height + 10)];
     }
-    [HUD removeFromSuperview];
-    HUD = nil;
+    [activityView removeFromSuperview];
+    activityView = nil;
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     CGRect rect = [[UIScreen mainScreen] bounds];
-    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height)];
-    [realScrollView setFrame:CGRectMake(0, 44, rect.size.width, rect.size.height - 64)];
-    scrollView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
+    [self.view setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height - 64)];
+
+    if (IS_IOS7) {
+        [self setAutomaticallyAdjustsScrollViewInsets:NO];
+        [realScrollView setFrame:CGRectMake(0, 64, rect.size.width, rect.size.height - 64)];
+        activityView = [[FPActivityView alloc] initWithFrame:CGRectMake(0, 64, self.view.frame.size.width, 1)];
+    }
+    else
+    {
+        [realScrollView setFrame:CGRectMake(0, 0, rect.size.width, rect.size.height - 64)];
+        activityView = [[FPActivityView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 1)];
+    }
+    
+    UIBarButtonItem *replyButton=[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(reply:)];
+    self.navigationItem.rightBarButtonItem = replyButton;
+    
     if (rootMail.type == 0)
         [topTitle setText:@"收件箱"];
     if (rootMail.type == 1)
         [topTitle setText:@"发件箱"];
     if (rootMail.type == 2)
         [topTitle setText:@"废件箱"];
-    
-    realView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"paperbackground2.png"]];
+
     
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     myBBS = appDelegate.myBBS;
+
     
-    HUD = [[MBProgressHUD alloc] initWithView:self.view];
-	[self.view insertSubview:HUD atIndex:1];
-	HUD.labelText = @"载入中...";
-	[HUD showWhileExecuting:@selector(firstTimeLoad) onTarget:self withObject:nil animated:YES];
-    [HUD release];
+    [activityView start];
+    [self.view addSubview:activityView];
+    [self performSelectorInBackground:@selector(firstTimeLoad) withObject:nil];
     
     UISwipeGestureRecognizer* recognizer;
     recognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(back:)];
@@ -103,10 +114,10 @@
 }
 -(IBAction)back:(id)sender
 {
+    [self.navigationController popViewControllerAnimated:YES];
     if (isForShowNotification) {
         [mDelegate refreshNotification];
     }
-    [self.navigationController popViewControllerAnimated:YES];
 }
 
 #pragma mark - Rotation
@@ -123,21 +134,14 @@
 
 -(IBAction)reply:(id)sender
 {
-    PostMailViewController * postMailViewController = [[PostMailViewController alloc] initWithNibName:@"PostMailViewController" bundle:nil];
+    PostMailViewController * postMailViewController = [[PostMailViewController alloc] init];
     postMailViewController.postType = 1;
     postMailViewController.rootMail = rootMail;
-    postMailViewController.mDelegate = self;
-    [self presentModalViewController:postMailViewController animated:YES];
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:postMailViewController];
+    nav.modalPresentationStyle = UIModalPresentationFormSheet;
+    [self presentViewController:nav animated:YES completion:nil];
     [postMailViewController release];
 }
-
--(void)dismissPostMailView
-{
-    [self dismissModalViewControllerAnimated:YES];
-}
-
-
-
 
 #pragma -Longpress
 

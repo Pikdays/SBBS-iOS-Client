@@ -76,13 +76,11 @@
             lbl = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, oneSlotSize, 25)];
             [lbl setText:title];
             [lbl setFont:TITLE_FONT];
-            //[lbl setShadowColor:TITLE_SHADOW_COLOR];
             [lbl setTextColor:TITLE_COLOR];
-            [lbl setLineBreakMode:UILineBreakModeMiddleTruncation];
+            [lbl setLineBreakMode:NSLineBreakByTruncatingMiddle];
             [lbl setAdjustsFontSizeToFitWidth:YES];
-            [lbl setMinimumFontSize:8];
-            [lbl setTextAlignment:UITextAlignmentCenter];
-            //[lbl setShadowOffset:CGSizeMake(0, 1)];
+            //[lbl setMinimumFontSize:8];
+            [lbl setTextAlignment:NSTextAlignmentCenter];
             [lbl setBackgroundColor:[UIColor clearColor]];
             [lbl setTag:i+50];
             
@@ -103,8 +101,6 @@
 -(void)drawRect:(CGRect)rect{
     CGContextRef context = UIGraphicsGetCurrentContext();
     
-    CGColorRef shadowColor = [UIColor colorWithRed:0 green:0 
-                                              blue:0 alpha:.9f].CGColor;
     
     
     //Fill Main Path
@@ -115,6 +111,11 @@
     
     CGContextSaveGState(context);
     
+    /*
+     
+     CGColorRef shadowColor = [UIColor colorWithRed:1 green:1
+     blue:1 alpha:0].CGColor;
+     
     //Draw Black Top Shadow
     
     CGContextSetShadowWithColor(context, CGSizeMake(0, 1.f), 2.f, shadowColor);
@@ -142,7 +143,7 @@
     CGContextStrokePath(context);
     
     CGContextRestoreGState(context);
-    
+    */
     
     CGPoint centerPoint;
     int i;
@@ -156,7 +157,8 @@
         CGContextFillEllipseInRect(context, CGRectMake(centerPoint.x-15, rect.size.height-42.5f, 25, 25));
         
         //Draw top Gradient
-        
+         
+        /*
         CGFloat colors[12] =   {0, 0, 0, 1,
                                 0, 0, 0, 0,
                                 0, 0, 0, 0};
@@ -171,20 +173,21 @@
         
         //Draw White Bottom Shadow
         
-        CGContextSetStrokeColorWithColor(context, [UIColor colorWithRed:1 green:1
-                                                                   blue:1 alpha:.4f].CGColor);
+        CGContextSetStrokeColorWithColor(context, [UIColor colorWithRed:0 green:0
+                                                                   blue:0 alpha:.4f].CGColor);
         CGContextSetLineWidth(context, .8f);
         CGContextAddArc(context,centerPoint.x-2.5,rect.size.height-30.5f,12.5f,24*M_PI/180,156*M_PI/180,0);
         CGContextDrawPath(context,kCGPathStroke);
         
         //Draw Black Top Shadow
-        
+
         CGContextSetStrokeColorWithColor(context, [UIColor colorWithRed:0 green:0
                                                                    blue:0 alpha:.2f].CGColor);
         
         CGContextAddArc(context,centerPoint.x-2.5,rect.size.height-30.5f,12.f,(i==titlesArr.count-1?28:-20)*M_PI/180,(i==0?-208:-160)*M_PI/180,1);
         CGContextSetLineWidth(context, 1.f);
         CGContextDrawPath(context,kCGPathStroke);
+         */
         
     }
 }

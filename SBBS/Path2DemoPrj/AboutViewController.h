@@ -14,6 +14,7 @@
 #import "SDImageCache.h"
 #import "ASIHTTPRequest.h"
 #import "articleViewController.h"
+#import "LoginViewController.h"
 
 @protocol AboutViewControllerDelegate <NSObject>
 

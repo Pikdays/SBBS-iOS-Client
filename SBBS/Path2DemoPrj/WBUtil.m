@@ -85,5 +85,4 @@
 	CFRelease(theUUID);
 	return [(NSString *)string autorelease];
 }
-
 @end
